@@ -4,16 +4,18 @@ import { NextResponse } from 'next/server';
 
 export async function GET(
   req: Request,
-  { params }: { params: { pageId: string } },
+  { params }: { params: Promise<{ pageId: string }> },
 ) {
   try {
+    const pageId = (await params).pageId;
+
     const supabase = await createClient();
     // Get authenticated user
 
     const { data, error } = await supabase
       .from('pages')
       .select('*')
-      .eq('id', params.pageId)
+      .eq('id', pageId)
       .single();
 
     if (error) throw error;
@@ -27,16 +29,17 @@ export async function GET(
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { pageId: string } },
+  { params }: { params: Promise<{ pageId: string }> },
 ) {
   try {
+    const pageId = (await params).pageId;
     const supabase = await createClient();
 
     const user = await getAuthenticatedUser(supabase);
     const { error } = await supabase
       .from('pages')
       .delete()
-      .eq('id', params.pageId)
+      .eq('id', pageId)
       .eq('user_id', user?.id);
 
     if (error) throw error;
@@ -49,9 +52,10 @@ export async function DELETE(
 
 export async function PUT(
   req: Request,
-  { params }: { params: { pageId: string } },
+  { params }: { params: Promise<{ pageId: string }> },
 ) {
   try {
+    const pageId = (await params).pageId;
     const supabase = await createClient();
     const user = await getAuthenticatedUser(supabase);
     const body = await req.json();
@@ -59,7 +63,7 @@ export async function PUT(
     const { data, error } = await supabase
       .from('pages')
       .update(body)
-      .eq('id', params.pageId)
+      .eq('id', pageId)
       .eq('user_id', user?.id)
       .select()
       .single();
