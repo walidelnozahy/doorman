@@ -1,14 +1,13 @@
 import { NextResponse } from 'next/server';
-
-import { createClient } from '@/utils/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import { Page } from '@/utils/types';
-import { getAuthenticatedUser } from '@/utils/get-authenticate-user';
+import { getAuthenticatedUser } from '@/lib/supabase/get-authenticate-user';
 
 export async function POST(req: Request) {
   try {
     const body: Page = await req.json();
 
-    if (!body.name || !body.account_id || !body.permissions) {
+    if (!body.name || !body.provider_account_id || !body.permissions) {
       throw new Error('Missing required fields');
     }
     const supabase = await createClient();
@@ -18,7 +17,7 @@ export async function POST(req: Request) {
       {
         user_id: user?.id,
         name: body.name,
-        account_id: body.account_id,
+        provider_account_id: body.provider_account_id,
         permissions: body.permissions,
         note: body.note,
       },

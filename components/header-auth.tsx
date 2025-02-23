@@ -1,7 +1,7 @@
 import { signOutAction } from '@/app/actions';
 import Link from 'next/link';
 import { Button } from './ui/button';
-import { createClient } from '@/utils/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import { LogOut } from 'lucide-react';
 import AppButton from './app-button';
 

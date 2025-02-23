@@ -7,12 +7,12 @@ import { usePathname } from 'next/navigation';
 export default function AppButton() {
   const pathname = usePathname();
 
-  if (pathname.includes('/app')) {
+  if (pathname.includes('/pages')) {
     return null;
   }
   return (
     <Button size='sm' color='primary'>
-      <Link href='/app'>Dashboard</Link>
+      <Link href='/pages'>Dashboard</Link>
     </Button>
   );
 }

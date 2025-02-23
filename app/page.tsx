@@ -1,8 +1,4 @@
-import { ThemeToggle } from '@/components/theme-toggle';
-import ConnectSupabaseSteps from '@/components/tutorial/connect-supabase-steps';
-import SignUpUserSteps from '@/components/tutorial/sign-up-user-steps';
 import { Button } from '@/components/ui/button';
-import { hasEnvVars } from '@/utils/supabase/check-env-vars';
 import Link from 'next/link';
 
 export default async function Home() {
@@ -19,7 +15,7 @@ export default async function Home() {
             need and share a link.
           </p>
           <Button asChild size='lg' className='text-lg px-8'>
-            <Link href='/app'>Get Started</Link>
+            <Link href='/pages'>Get Started</Link>
           </Button>
         </div>
       </section>

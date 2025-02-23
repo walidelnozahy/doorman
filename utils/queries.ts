@@ -1,83 +1,61 @@
-import { Page } from './types';
+import { Page, TemplateRequest } from './types';
 
-export async function getAllPages() {
+// Generic fetch handler for all API requests
+// Parameters:
+//   url: string - The API endpoint
+//   method?: string - HTTP method (defaults to 'GET')
+//   body?: any - Request body (optional)
+// Returns: Promise<T>
+export async function fetchHandler<T>(
+  url: string,
+  method: string = 'GET',
+  body?: any,
+): Promise<T> {
   try {
-    const response = await fetch('/api/pages');
-    if (!response.ok) {
-      throw new Error('Failed to fetch pages');
-    }
-    return await response.json();
-  } catch (error) {
-    console.error('Error fetching pages:', error);
-    throw error;
-  }
-}
-
-export async function getPageById(id: string) {
-  try {
-    const response = await fetch(`/api/pages/${id}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch page');
-    }
-    return await response.json();
-  } catch (error) {
-    console.error('Error fetching page:', error);
-    throw error;
-  }
-}
-
-export async function createPage(page: Omit<Page, 'id'>) {
-  try {
-    const response = await fetch('/api/pages', {
-      method: 'POST',
+    const options: RequestInit = {
+      method,
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(page),
-    });
+    };
+
+    if (body) {
+      options.body = JSON.stringify(body);
+    }
+
+    const response = await fetch(url, options);
 
     if (!response.ok) {
-      throw new Error('Failed to create page');
+      if (response.status === 404 && url.includes('/connections/')) {
+        return null as T;
+      }
+      throw new Error(`Failed to ${method.toLowerCase()} ${url}`);
     }
+
     return await response.json();
   } catch (error) {
-    console.error('Error creating page:', error);
+    console.error(`Error ${method.toLowerCase()}ing ${url}:`, error);
     throw error;
   }
 }
 
-export async function updatePage(id: string, updates: Partial<Page>) {
-  try {
-    const response = await fetch(`/api/pages/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(updates),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to update page');
-    }
-    return await response.json();
-  } catch (error) {
-    console.error('Error updating page:', error);
-    throw error;
+export async function generateTemplate(request: TemplateRequest) {
+  const origin = process.env.NEXT_PUBLIC_API_ORIGIN;
+  if (!origin) {
+    throw new Error('API origin is not defined');
   }
-}
 
-export async function deletePage(id: string) {
-  try {
-    const response = await fetch(`/api/pages/${id}`, {
-      method: 'DELETE',
-    });
+  const response = await fetch(`${origin}/generate-template`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(request),
+  });
 
-    if (!response.ok) {
-      throw new Error('Failed to delete page');
-    }
-    return await response.json();
-  } catch (error) {
-    console.error('Error deleting page:', error);
-    throw error;
+  if (!response.ok) {
+    throw new Error('Failed to generate template');
   }
+
+  return response.json();
 }

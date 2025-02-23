@@ -12,9 +12,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { CreateAccessPageDialog } from '@/components/create-access-page-dialog';
-import { EmptyStateIcon } from '@/components/icons/empty-state';
 import { Page } from '@/utils/types';
-import { createPage, deletePage, getAllPages } from '@/utils/queries';
+import { fetchHandler } from '@/utils/queries';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -39,11 +38,17 @@ export default function Pages() {
     refetch,
   } = useQuery({
     queryKey: ['pages'],
-    queryFn: getAllPages,
+    queryFn: async () => {
+      const pages = await fetchHandler('/api/pages');
+      return pages as Page[];
+    },
   });
 
   const createPageMutation = useMutation({
-    mutationFn: createPage,
+    mutationFn: async (data: Page) => {
+      const page = await fetchHandler('/api/pages', 'POST', data);
+      return page as Page;
+    },
     onSuccess: () => {
       refetch();
       setIsModalOpen(false);
@@ -63,7 +68,9 @@ export default function Pages() {
   });
 
   const deletePageMutation = useMutation({
-    mutationFn: deletePage,
+    mutationFn: async (id: string) => {
+      await fetchHandler(`/api/pages/${id}`, 'DELETE');
+    },
     onSuccess: () => {
       refetch();
       toast({
@@ -86,15 +93,11 @@ export default function Pages() {
     await createPageMutation.mutateAsync(data);
   };
 
-  const handleDeleteClick = (page: Page) => {
-    setDeletePageData({ id: page.id!, name: page.name });
-  };
-
   const columns = createColumns({
     onDeleteClick: (page: Page) =>
       setDeletePageData({ id: page.id!, name: page.name }),
   });
-  console.log('columns', columns);
+
   if (isPending) {
     return <PagesSkeleton />;
   }

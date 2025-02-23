@@ -40,14 +40,14 @@ export const updateSession = async (request: NextRequest) => {
     const user = await supabase.auth.getUser();
     const isAuthenticated = !user.error;
     const isAuthPage = request.nextUrl.pathname.startsWith('/auth');
-    const isAppPage = request.nextUrl.pathname.startsWith('/app');
+    const isAppPage = request.nextUrl.pathname.startsWith('/pages');
 
     // Redirect authenticated users away from auth pages to app
     if (isAuthPage && isAuthenticated) {
-      return NextResponse.redirect(new URL('/app', request.url));
+      return NextResponse.redirect(new URL('/pages', request.url));
     }
 
-    // Redirect unauthenticated users to auth page only when trying to access /app routes
+    // Redirect unauthenticated users to auth page only when trying to access /pages routes
     if (isAppPage && !isAuthenticated) {
       return NextResponse.redirect(new URL('/auth', request.url));
     }

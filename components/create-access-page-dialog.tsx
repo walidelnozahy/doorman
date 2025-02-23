@@ -32,7 +32,7 @@ export function CreateAccessPageDialog({
 }: CreateAccessPageModalProps) {
   const [formData, setFormData] = useState<Page>({
     name: '',
-    account_id: '',
+    provider_account_id: '',
     permissions: {},
     note: '',
   });
@@ -71,17 +71,22 @@ export function CreateAccessPageDialog({
   };
 
   const handleAccountIdBlur = () => {
-    validateAccountId(formData.account_id);
+    validateAccountId(formData.provider_account_id);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateAccountId(formData.account_id)) {
+    if (!validateAccountId(formData.provider_account_id)) {
       return;
     }
     try {
       await onCreateAccessPage(formData);
-      setFormData({ name: '', account_id: '', permissions: {}, note: '' });
+      setFormData({
+        name: '',
+        provider_account_id: '',
+        permissions: {},
+        note: '',
+      });
     } catch (err) {
       setError('Invalid JSON in permissions field');
     }
@@ -107,12 +112,12 @@ export function CreateAccessPageDialog({
               />
             </div>
             <div className='space-y-2'>
-              <Label htmlFor='account_id'>Account ID</Label>
+              <Label htmlFor='provider_account_id'>Account ID</Label>
               <Input
-                id='account_id'
-                name='account_id'
+                id='provider_account_id'
+                name='provider_account_id'
                 placeholder='Enter 12-digit AWS account ID (e.g., 012345678901)'
-                value={formData.account_id}
+                value={formData.provider_account_id}
                 onChange={handleInputChange}
                 onBlur={handleAccountIdBlur}
                 required

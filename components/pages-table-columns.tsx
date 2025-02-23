@@ -90,9 +90,12 @@ export const createColumns = ({
       return (
         <div className='flex items-center gap-2'>
           <code className='relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm'>
-            {page.account_id}
+            {page.provider_account_id}
           </code>
-          <CopyButton text={page.account_id} message='Copied account ID' />
+          <CopyButton
+            text={page.provider_account_id}
+            message='Copied account ID'
+          />
         </div>
       );
     },
@@ -168,23 +171,6 @@ export const createColumns = ({
     },
   },
   {
-    id: 'status',
-    header: 'Status',
-    className: 'w-[130px]',
-    cell: (page) => {
-      const status = (page.status as StatusType) || 'idle';
-      const style = statusStyles[status];
-
-      return (
-        <span
-          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${style.className}`}
-        >
-          {style.label}
-        </span>
-      );
-    },
-  },
-  {
     id: 'actions',
     header: '',
     className: 'w-[80px] text-right',
@@ -208,10 +194,7 @@ export const createColumns = ({
                 Open Page
               </Link>
             </DropdownMenuItem>
-            <CopyLinkMenuItem
-              pageId={page.id ?? ''}
-              connectionId={page.connection_id ?? ''}
-            />
+            <CopyLinkMenuItem pageId={page.id ?? ''} connectionId={''} />
             <DropdownMenuItem
               className='text-destructive'
               onClick={() => onDeleteClick?.(page)}
