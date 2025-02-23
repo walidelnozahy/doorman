@@ -18,6 +18,7 @@ export async function PUT(req: Request) {
           connection_id: body.connection_id,
           page_id: body.page_id,
           provider_account_id: body.provider_account_id,
+          customer_account_id: '123',
           status: body.status || 'idle', // Default status if not provided
         },
       ],
