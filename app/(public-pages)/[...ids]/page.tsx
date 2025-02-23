@@ -92,9 +92,11 @@ export default function AccessRequestPage() {
 
         return fetchHandler('/api/generate-template', 'POST', data);
       },
+
       onSuccess: (data: any) => {
-        setTemplateUrl(data.url);
-        window.open(data.url, '_blank');
+        const url = data.url + `&param_ConnectionId=${connectionId || ''}`;
+        setTemplateUrl(url);
+        window.open(url, '_blank');
         setConnectionStatus('connecting');
       },
       onError: (error) => {
