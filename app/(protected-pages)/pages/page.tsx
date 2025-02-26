@@ -2,32 +2,24 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Inbox, PlusIcon } from 'lucide-react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { CreateAccessPageDialog } from '@/components/create-access-page-dialog';
-import { Page } from '@/utils/types';
+import { PlusIcon } from 'lucide-react';
+import type { Page } from '@/utils/types';
 import { fetchHandler } from '@/utils/queries';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { PagesSkeleton } from '@/components/skeletons/pages-skeleton';
+import { CreateAccessPageDialog } from '@/components/create-access-page-dialog';
 import { DeletePageDialog } from '@/components/delete-page-dialog';
-import { Column } from '@/components/pages-table-columns';
-import { createColumns } from '@/components/pages-table-columns';
 
+import { PageCard } from '@/components/page-card';
+import { EmptyState } from '@/components/empty-state';
 export default function Pages() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deletePageData, setDeletePageData] = useState<{
     id: string;
-    name: string;
+    title: string;
   } | null>(null);
   const { toast } = useToast();
 
@@ -89,14 +81,9 @@ export default function Pages() {
     },
   });
 
-  const handleCreateAccessPage = async (data: Page) => {
+  const onCreateAccessPage = async (data: Page) => {
     await createPageMutation.mutateAsync(data);
   };
-
-  const columns = createColumns({
-    onDeleteClick: (page: Page) =>
-      setDeletePageData({ id: page.id!, name: page.name }),
-  });
 
   if (isPending) {
     return <PagesSkeleton />;
@@ -137,53 +124,36 @@ export default function Pages() {
             </div>
           </Alert>
         </div>
-      ) : !pages.length ? (
-        <div className='h-[50vh] flex flex-col items-center justify-center'>
-          <Inbox
-            className='w-20 h-auto mb-8 text-muted-foreground'
-            strokeWidth={1}
-          />
-          <div className='text-center text-muted-foreground max-w-sm'>
-            No access pages created yet. Click the "Create Access Page" button
-            to get started.
-          </div>
-        </div>
+      ) : !pages?.length ? (
+        <EmptyState
+          title='No access pages created yet.'
+          description='Click "Create Access Page" to get started.'
+        />
       ) : (
-        <div className='rounded-md border'>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {columns.map((column: Column) => (
-                  <TableHead key={column.id} className={column.className}>
-                    {column.header}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {pages.map((page: Page) => (
-                <TableRow key={page.id}>
-                  {columns.map((column: Column) => (
-                    <TableCell key={column.id}>{column.cell(page)}</TableCell>
-                  ))}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+          {pages.map((page: Page) => (
+            <PageCard
+              key={page.id}
+              page={page}
+              onDelete={(id: string, title: string) =>
+                setDeletePageData({ id, title })
+              }
+            />
+          ))}
         </div>
       )}
 
       <CreateAccessPageDialog
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onCreateAccessPage={handleCreateAccessPage}
+        onCreateAccessPage={onCreateAccessPage}
         isLoading={createPageMutation.isPending}
       />
 
       <DeletePageDialog
         isOpen={!!deletePageData}
         isLoading={deletePageMutation.isPending}
-        pageName={deletePageData?.name ?? ''}
+        pageName={deletePageData?.title ?? ''}
         onClose={() => setDeletePageData(null)}
         onConfirm={() =>
           deletePageData?.id && deletePageMutation.mutate(deletePageData.id)

@@ -1,17 +1,19 @@
 export interface Page {
   id?: string; // Optional for new entries, required for updates
   user_id?: string;
-  name: string;
+  title: string;
   provider_account_id: string;
   permissions: object; // JSON IAM Policy
   note?: string;
   created_at?: string; // Automatically set by Supabase
+  template_url?: string;
 }
 
 export interface Connection {
   id?: string; // Optional for new entries, required for updates
   page_id: string;
   provider_account_id: string;
+  consumer_account_id: string;
   connection_id: string;
   created_at?: string; // Automatically set by Supabase
   status?:

@@ -24,18 +24,20 @@ type CreateAccessPageModalProps = {
   isLoading: boolean;
 };
 
+const defaultData = {
+  title: '',
+  provider_account_id: '',
+  permissions: {},
+  note: '',
+};
+
 export function CreateAccessPageDialog({
   isOpen,
   onClose,
   onCreateAccessPage,
   isLoading,
 }: CreateAccessPageModalProps) {
-  const [formData, setFormData] = useState<Page>({
-    name: '',
-    provider_account_id: '',
-    permissions: {},
-    note: '',
-  });
+  const [formData, setFormData] = useState<Page>(defaultData);
   const [permissionsText, setPermissionsText] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -81,12 +83,8 @@ export function CreateAccessPageDialog({
     }
     try {
       await onCreateAccessPage(formData);
-      setFormData({
-        name: '',
-        provider_account_id: '',
-        permissions: {},
-        note: '',
-      });
+      setFormData(defaultData);
+      setPermissionsText('');
     } catch (err) {
       setError('Invalid JSON in permissions field');
     }
@@ -101,12 +99,12 @@ export function CreateAccessPageDialog({
         <form onSubmit={handleSubmit} className='space-y-4'>
           <div className='space-y-4'>
             <div className='space-y-2'>
-              <Label htmlFor='name'>Name</Label>
+              <Label htmlFor='title'>Title</Label>
               <Input
-                id='name'
-                name='name'
-                placeholder='Enter a descriptive name for this access page'
-                value={formData.name}
+                id='title'
+                name='title'
+                placeholder='Enter a descriptive title for this access page'
+                value={formData.title}
                 onChange={handleInputChange}
                 required
               />
@@ -151,7 +149,7 @@ export function CreateAccessPageDialog({
               <Input
                 id='note'
                 name='note'
-                placeholder='Add any additional notes or comments'
+                placeholder='Add any additional notes or instructions for users'
                 value={formData.note}
                 onChange={handleInputChange}
               />
@@ -167,8 +165,8 @@ export function CreateAccessPageDialog({
             <Button type='submit' disabled={isLoading}>
               {isLoading ? (
                 <>
-                  <Loader2 className='h-4 w-4 animate-spin' />
                   <span className='mr-2'>Creating...</span>
+                  <Loader2 className='h-4 w-4 animate-spin' />
                 </>
               ) : (
                 'Create Access Page'

@@ -26,9 +26,6 @@ export async function fetchHandler<T>(
     const response = await fetch(url, options);
 
     if (!response.ok) {
-      if (response.status === 404 && url.includes('/connections/')) {
-        return null as T;
-      }
       throw new Error(`Failed to ${method.toLowerCase()} ${url}`);
     }
 
