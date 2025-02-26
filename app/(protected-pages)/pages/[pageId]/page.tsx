@@ -9,7 +9,7 @@ import { AlertCircle, Plus, Copy, ExternalLink, Shield } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { formatDate } from '@/utils/ago';
-import { PagesSkeleton } from '@/components/skeletons/pages-skeleton';
+
 import {
   Table,
   TableBody,
@@ -64,7 +64,7 @@ export default function PageDetails() {
     },
     enabled: !!page, // Only run this query if the page data is available
   });
-
+  const isLoading = isPending || isConnectionsLoading;
   const createPageMutation = useMutation({
     mutationFn: async (data: Connection) => {
       const page = await fetchHandler(`/api/connections`, 'PUT', {
@@ -95,7 +95,7 @@ export default function PageDetails() {
     await createPageMutation.mutateAsync(data);
   };
 
-  if (isPending) {
+  if (isLoading) {
     return <PageDetailsSkeleton />;
   }
 
@@ -128,22 +128,6 @@ export default function PageDetails() {
       </div>
     );
   }
-
-  // Helper function to render status badge
-  const renderStatusBadge = (status: string) => {
-    const variants = {
-      active: 'success',
-      pending: 'warning',
-      inactive: 'secondary',
-    };
-    const variant = variants[status as keyof typeof variants] || 'default';
-
-    return (
-      <Badge variant={variant as any}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </Badge>
-    );
-  };
 
   return (
     <div className='container mx-auto py-10 space-y-8'>
@@ -286,13 +270,7 @@ export default function PageDetails() {
         </div>
 
         {/* Connections Table */}
-        {isConnectionsLoading ? (
-          <div className='space-y-2'>
-            <div className='h-4 w-full bg-muted rounded animate-pulse' />
-            <div className='h-4 w-full bg-muted rounded animate-pulse' />
-            <div className='h-4 w-full bg-muted rounded animate-pulse' />
-          </div>
-        ) : connectionsError ? (
+        {connectionsError ? (
           <Alert variant='destructive'>
             <AlertCircle className='h-4 w-4' />
             <AlertTitle>Error</AlertTitle>
