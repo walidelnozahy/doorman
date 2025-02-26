@@ -16,13 +16,7 @@ export interface Connection {
   consumer_account_id: string;
   connection_id: string;
   created_at?: string; // Automatically set by Supabase
-  status?:
-    | 'idle'
-    | 'connecting'
-    | 'connected'
-    | 'disconnecting'
-    | 'disconnected'
-    | 'error';
+  status?: 'connecting' | 'connected' | 'disconnecting' | 'disconnected';
 }
 
 export interface TemplateRequest {
