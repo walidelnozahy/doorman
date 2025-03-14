@@ -29,8 +29,6 @@ export default async function PageDetails({ params }: PageDetailsProps) {
       return notFound();
     }
 
-    const pageUrl = `${origin || ''}/${pageId}`;
-
     const connectedCount = connections.filter(
       (c) => c.status === 'connected',
     ).length;
@@ -45,8 +43,8 @@ export default async function PageDetails({ params }: PageDetailsProps) {
             <h1 className='text-2xl font-bold'>{page.title}</h1>
             <div className='flex flex-col md:flex-row items-end md:items-center gap-2 md:gap-4'>
               <div className='flex items-center gap-2'>
-                <CopyUrlButton url={pageUrl} />
-                <OpenInNewTabButton url={pageUrl} />
+                <CopyUrlButton path={pageId} />
+                <OpenInNewTabButton path={`/${pageId}`} />
               </div>
             </div>
           </div>

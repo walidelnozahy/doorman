@@ -95,7 +95,7 @@ export function PageCard({ page, onDeleteClick }: PageCardProps) {
                     <DropdownMenuItem
                       onClick={(e) => {
                         e.preventDefault();
-                        copyToClipboard(pageUrl);
+                        copyToClipboard(`${window.location.origin}/${page.id}`);
                       }}
                     >
                       <Copy className='h-4 w-4 mr-2' />
