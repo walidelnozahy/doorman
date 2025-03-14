@@ -1,4 +1,5 @@
-import { Page, TemplateRequest } from './types';
+import { origin } from '@/config';
+import { TemplateRequest } from './types';
 
 // Generic fetch handler for all API requests
 // Parameters:
@@ -12,6 +13,8 @@ export async function fetchHandler<T>(
   body?: any,
 ): Promise<T> {
   try {
+    url = `${origin}${url}`;
+
     const options: RequestInit = {
       method,
       headers: {
@@ -26,7 +29,14 @@ export async function fetchHandler<T>(
     const response = await fetch(url, options);
 
     if (!response.ok) {
-      throw new Error(`Failed to ${method.toLowerCase()} ${url}`);
+      // Try to extract error message from response
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.error ||
+          errorData.message ||
+          errorData ||
+          `Failed to ${method.toLowerCase()} ${url}`,
+      );
     }
 
     return await response.json();
@@ -37,22 +47,35 @@ export async function fetchHandler<T>(
 }
 
 export async function generateTemplate(request: TemplateRequest) {
-  const origin = process.env.NEXT_PUBLIC_API_ORIGIN;
-  if (!origin) {
-    throw new Error('API origin is not defined');
+  try {
+    const origin = process.env.NEXT_PUBLIC_API_ORIGIN;
+    if (!origin) {
+      throw new Error('API origin is not defined');
+    }
+
+    const response = await fetch(`${origin}/generate-template`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      // Try to extract error message from response
+      const errorData = await response.json().catch(() => ({}));
+
+      throw new Error(
+        errorData.error ||
+          errorData.message ||
+          errorData ||
+          'Failed to generate template',
+      );
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error('Error generating template:', error);
+    throw error;
   }
-
-  const response = await fetch(`${origin}/generate-template`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(request),
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to generate template');
-  }
-
-  return response.json();
 }

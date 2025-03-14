@@ -1,4 +1,4 @@
-import { signOutAction } from '@/app/actions';
+import { signOutAction } from '@/app/actions/auth';
 import Link from 'next/link';
 import { Button } from './ui/button';
 import { createClient } from '@/lib/supabase/server';
@@ -18,7 +18,7 @@ export default async function AuthButton() {
         <>
           <AppButton />
           <Button variant='ghost' size='icon' onClick={signOutAction}>
-            <LogOut className='mr-2 h-4 w-4' />
+            <LogOut className='h-4 w-4' />
           </Button>
         </>
       ) : (

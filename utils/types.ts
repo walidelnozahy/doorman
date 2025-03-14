@@ -23,6 +23,6 @@ export interface TemplateRequest {
   title: string;
   description: string;
   pageId: string;
-  accountId: string;
+  providerAccountId: string;
   permissions: any;
 }

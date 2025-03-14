@@ -1,8 +1,7 @@
 'use client';
 
-import type React from 'react';
-
-import { useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useActionState, useEffect, startTransition } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -11,160 +10,200 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { AlertCircle, Loader2 } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Connection } from '@/utils/types';
+import { Loader2 } from 'lucide-react';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { Form, FormField } from './ui/form';
+import { useToast } from '@/hooks/use-toast';
+import {
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+  FormDescription,
+} from '@/components/ui/form';
+import { FormGlobalError } from '@/components/form-field-error';
+import { createConnection } from '@/app/actions/create-connection';
+import { createConnectionSchema } from '@/utils/schema/create-connection-schema';
+import { useCreateConnectionDialog } from './create-connection-button';
 
 type CreateConnectionDialogProps = {
   isOpen: boolean;
   onClose: () => void;
-  onCreateConnection: (data: Connection) => Promise<void>;
-  isLoading: boolean;
-  providerAccountId: string; // This will be passed in and displayed as read-only
+  pageId: string;
+  providerAccountId: string;
 };
 
-const defaultData = (providerAccountId: string) => ({
-  provider_account_id: providerAccountId,
-  connection_id: '',
-  consumer_account_id: '',
-  page_id: '',
-});
+const INITIAL_STATE = {
+  data: null,
+  errors: null,
+  success: false,
+};
 
 export function CreateConnectionDialog({
-  isOpen,
-  onClose,
-  onCreateConnection,
-  isLoading,
+  pageId,
   providerAccountId,
 }: CreateConnectionDialogProps) {
-  const [formData, setFormData] = useState<Connection>(
-    defaultData(providerAccountId),
+  const { isOpen, setIsOpen } = useCreateConnectionDialog(pageId);
+  const { toast } = useToast();
+  const form = useForm<z.infer<typeof createConnectionSchema>>({
+    resolver: zodResolver(createConnectionSchema),
+    defaultValues: {
+      connection_id: '',
+      consumer_account_id: '',
+      provider_account_id: providerAccountId,
+      page_id: pageId,
+    },
+  });
+
+  const [formState, formAction, pending] = useActionState(
+    createConnection,
+    INITIAL_STATE,
   );
-  const [error, setError] = useState<string | null>(null);
 
-  const validateCustomerAccountId = (value: string) => {
-    // Only validate if a value is provided (since it's optional)
-    if (value && !/^\d{12}$/.test(value)) {
-      setError('Customer Account ID must be exactly 12 digits');
-      return false;
+  // Handle dialog close with form reset
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      form.reset();
     }
-    setError(null);
-    return true;
+    setIsOpen(open);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-
-    if (name === 'consumer_account_id' && value) {
-      validateCustomerAccountId(value);
-    } else {
-      setError(null);
-    }
-  };
-
-  const handleCustomerAccountIdBlur = () => {
-    if (formData.consumer_account_id) {
-      validateCustomerAccountId(formData.consumer_account_id);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (
-      formData.consumer_account_id &&
-      !validateCustomerAccountId(formData.consumer_account_id)
-    ) {
-      return;
-    }
-
+  const onSubmit = async (data: z.infer<typeof createConnectionSchema>) => {
     try {
-      await onCreateConnection(formData);
-      setFormData(defaultData(providerAccountId));
-    } catch (err) {
-      setError('Failed to create connection');
+      // Convert form data to FormData for the server action
+      const formData = new FormData();
+      Object.entries(data).forEach(([key, value]) => {
+        formData.append(key, value || '');
+      });
+
+      // Call the server action inside startTransition
+      startTransition(() => {
+        formAction(formData);
+      });
+    } catch (error) {
+      console.error('Form submission error:', error);
     }
   };
 
+  // Effect to handle server-side response
+  useEffect(() => {
+    // Handle success
+    if (formState?.success) {
+      toast({
+        title: 'Success!',
+        description: 'Connection created successfully.',
+        variant: 'default',
+      });
+      setIsOpen(null);
+      form.reset();
+    }
+
+    // Handle errors
+    const errorKeys = Object.keys(formState?.errors || {});
+    errorKeys.forEach((errorKey) => {
+      if (formState?.errors && errorKey in formState.errors) {
+        const errorArray = formState.errors[
+          errorKey as keyof typeof formState.errors
+        ] as string[];
+
+        if (errorArray && errorArray.length > 0) {
+          form.setError(errorKey as any, {
+            message: errorArray[0],
+          });
+        }
+      }
+    });
+  }, [formState, setIsOpen, toast, form]);
+  console.log('formState', formState);
+  console.log('form', form);
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={!!isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className='sm:max-w-[500px]'>
         <DialogHeader>
           <DialogTitle>Create Connection</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className='space-y-4'>
-          <div className='space-y-4'>
-            <div className='space-y-2'>
-              <Label htmlFor='provider_account_id'>Provider Account ID</Label>
-              <Input
-                id='provider_account_id'
-                name='provider_account_id'
-                value={formData.provider_account_id}
-                disabled
-                className='bg-muted'
-              />
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='connection_id'>Connection ID</Label>
-              <Input
-                id='connection_id'
-                name='connection_id'
-                placeholder='Enter connection ID'
-                value={formData.connection_id}
-                onChange={(e) => {
-                  // Replace spaces with dashes and remove any characters that aren't alphanumeric or dashes
-                  const sanitizedValue = e.target.value
-                    .replace(/\s+/g, '-')
-                    .replace(/[^a-zA-Z0-9-]/g, '');
-                  handleInputChange({
-                    ...e,
-                    target: {
-                      ...e.target,
-                      value: sanitizedValue,
-                      name: 'connection_id',
-                    },
-                  });
-                }}
-                required
-              />
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='consumer_account_id'>
-                Customer Account ID (Optional)
-              </Label>
-              <Input
-                id='consumer_account_id'
-                name='consumer_account_id'
-                placeholder='Enter 12-digit AWS account ID (e.g., 012345678901)'
-                value={formData.consumer_account_id}
-                onChange={handleInputChange}
-                onBlur={handleCustomerAccountIdBlur}
-                pattern='\d{12}'
-                maxLength={12}
-              />
-            </div>
-          </div>
-          {error && (
-            <Alert variant='destructive'>
-              <AlertCircle className='h-4 w-4' />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          <div className='flex justify-end'>
-            <Button type='submit' disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <span className='mr-2'>Creating...</span>
-                  <Loader2 className='h-4 w-4 animate-spin' />
-                </>
-              ) : (
-                'Create Connection'
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+            <FormField
+              control={form.control}
+              name='provider_account_id'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Provider Account ID</FormLabel>
+                  <FormControl>
+                    <Input {...field} disabled className='bg-muted' />
+                  </FormControl>
+                </FormItem>
               )}
-            </Button>
-          </div>
-        </form>
+            />
+
+            <FormField
+              control={form.control}
+              name='connection_id'
+              render={({ field }) => {
+                return (
+                  <FormItem>
+                    <FormLabel>Connection ID</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder='Enter connection ID'
+                        onChange={(e) => {
+                          // Replace spaces with dashes and remove any characters that aren't alphanumeric or dashes
+                          const sanitizedValue = e.target.value
+                            .replace(/\s+/g, '-')
+                            .replace(/[^a-zA-Z0-9-]/g, '');
+                          field.onChange(sanitizedValue);
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
+            />
+
+            <FormField
+              control={form.control}
+              name='consumer_account_id'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Customer Account ID (Optional)</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder='Enter 12-digit AWS account ID (e.g., 012345678901)'
+                      pattern='\d{12}'
+                      maxLength={12}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    12-digit AWS account ID of the customer
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <input type='hidden' name='page_id' value={pageId} />
+
+            <FormGlobalError error={formState?.errors} />
+
+            <div className='flex justify-end'>
+              <Button type='submit' disabled={pending}>
+                {pending ? (
+                  <>
+                    <Loader2 className='h-4 w-4 animate-spin' />
+                    <span className='ml-2'>Creating...</span>
+                  </>
+                ) : (
+                  'Create Connection'
+                )}
+              </Button>
+            </div>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

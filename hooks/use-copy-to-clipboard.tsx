@@ -1,10 +1,14 @@
+'use client';
 import { useToast } from '@/hooks/use-toast';
 import { CheckIcon, CopyIcon } from 'lucide-react';
 
 export function useCopyToClipboard() {
   const { toast } = useToast();
 
-  const copyToClipboard = async (text: string, message: string = 'Copied to clipboard') => {
+  const copyToClipboard = async (
+    text: string,
+    message: string = 'Copied to clipboard',
+  ) => {
     try {
       await navigator.clipboard.writeText(text);
       toast({
@@ -25,4 +29,4 @@ export function useCopyToClipboard() {
   };
 
   return { copyToClipboard };
-} 
+}

@@ -1,5 +1,6 @@
+'use client';
+
 import { Page } from '@/utils/types';
-import { formatDate } from '@/utils/ago';
 import {
   Copy,
   ExternalLink,
@@ -25,43 +26,48 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import Link from 'next/link';
-import { useQuery } from '@tanstack/react-query';
-import { fetchHandler } from '@/utils/queries';
-import { Connection } from '@/utils/types';
 import { Badge } from '@/components/ui/badge';
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
+import { useEffect, useState } from 'react';
+import { fetchConnections } from '@/app/actions/fetch-connections';
+import { origin } from '@/config';
 
 interface PageCardProps {
   page: Page;
-  onDelete: (id: string, name: string) => void;
+  onDeleteClick: () => void;
 }
 
-export function PageCard({ page, onDelete }: PageCardProps) {
+export function PageCard({ page, onDeleteClick }: PageCardProps) {
   const { copyToClipboard } = useCopyToClipboard();
+  const [connectionCount, setConnectionCount] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const pageUrl = `${window.location.origin}/${page.id}`;
+  const pageUrl = `${origin || ''}/${page.id}`;
 
-  // Query for connections related to this page
-  const { data: connections, isLoading } = useQuery({
-    queryKey: ['connections-count', page.id],
-    queryFn: async () => {
-      const connections = await fetchHandler(
-        `/api/connections?pageId=${page.id}`,
-      );
-      return connections as Connection[];
-    },
-    // Don't refetch on window focus for better performance
-    refetchOnWindowFocus: false,
-  });
+  // Fetch connections using server action
+  useEffect(() => {
+    const getConnections = async () => {
+      setIsLoading(true);
+      try {
+        const connections = await fetchConnections(page.id || '');
+        setConnectionCount(connections.length);
+      } catch (error) {
+        console.error('Error fetching connections:', error);
+        setConnectionCount(0);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const connectionCount = connections?.length || 0;
+    getConnections();
+  }, [page.id]);
 
   // Extract just the account number from the provider_account_id
   const accountNumber = page.provider_account_id;
 
   return (
     <Link href={`/pages/${page.id}`} className='block'>
-      <Card className='overflow-hidden hover:shadow-md transition-all duration-200 hover:bg-accent/20 cursor-pointer'>
+      <Card className='overflow-hidden hover:shadow-md transition-all duration-200 hover:bg-accent/20 cursor-pointer h-[150px] flex flex-col'>
         <CardHeader className='pb-2'>
           <div className='flex justify-between items-center gap-4'>
             <div className='min-w-0 max-w-[70%]'>
@@ -109,7 +115,7 @@ export function PageCard({ page, onDelete }: PageCardProps) {
                       className='text-destructive focus:text-destructive'
                       onClick={(e) => {
                         e.preventDefault();
-                        onDelete(page.id!, page.title);
+                        onDeleteClick();
                       }}
                     >
                       <Trash2 className='h-4 w-4 mr-2' />
@@ -126,14 +132,16 @@ export function PageCard({ page, onDelete }: PageCardProps) {
             </CardDescription>
           )} */}
         </CardHeader>
-        <CardContent className='pb-2'>
-          {page.note && (
-            <CardDescription className='line-clamp-2 h-10 '>
+        <CardContent className='pb-2 flex-grow'>
+          {page.note ? (
+            <CardDescription className='line-clamp-2'>
               {page.note}
             </CardDescription>
+          ) : (
+            <div className='h-10'></div> // Empty space placeholder when no note
           )}
         </CardContent>
-        <div className='border-t border-border'></div>
+        <div className='border-t border-border mt-auto'></div>
         <CardFooter className='px-6 py-2 flex justify-between items-center'>
           <div className='flex items-center text-muted-foreground text-xs gap-1'>
             <span className='truncate max-w-[180px]'>{pageUrl}</span>

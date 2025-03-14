@@ -34,23 +34,3 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 }
-export async function GET(req: Request) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const pageId = searchParams.get('pageId');
-    const supabase = await createClient();
-
-    const query = supabase.from('connections').select('*');
-
-    if (pageId) {
-      query.eq('page_id', pageId);
-    }
-
-    const { data, error } = await query;
-
-    if (error) throw error;
-    return NextResponse.json(data);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
-  }
-}

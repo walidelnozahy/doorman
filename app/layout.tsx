@@ -5,13 +5,11 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import AuthButton from '@/components/header-auth';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
-
-const defaultUrl = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
-  : 'http://localhost:3000';
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
+import { origin } from '@/config';
 
 export const metadata = {
-  metadataBase: new URL(defaultUrl),
+  metadataBase: new URL(origin),
   title: 'Doorman - Secure AWS Access Management',
   description:
     'Doorman makes it easy to securely request and manage access to your users’ AWS accounts with a simple, shareable link.',
@@ -36,34 +34,37 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <div className='min-h-screen flex flex-col'>
-            <nav className='border-b'>
-              <div className='container mx-auto py-4 flex justify-between items-center'>
-                <Link href='/' className='text-2xl font-bold text-primary'>
-                  Doorman
-                </Link>
-                <div className='flex items-center space-x-4'>
-                  <AuthButton />
+          <NuqsAdapter>
+            <div className='min-h-screen flex flex-col'>
+              <nav className='border-b'>
+                <div className='container mx-auto py-4 flex justify-between items-center'>
+                  <Link href='/' className='text-2xl font-bold text-primary'>
+                    Doorman
+                  </Link>
+                  <div className='flex items-center space-x-4'>
+                    <AuthButton />
+                  </div>
                 </div>
-              </div>
-            </nav>
+              </nav>
 
-            <main className='flex-grow flex'>
-              <div className='container mx-auto w-full'>{children}</div>
-            </main>
+              <main className='flex-grow flex'>
+                <div className='container mx-auto w-full'>{children}</div>
+              </main>
 
-            <footer className='border-t'>
-              <div className='container mx-auto px-4 py-8'>
-                <div className='flex items-center justify-center gap-2'>
-                  <span className='text-muted-foreground'>
-                    © {new Date().getFullYear()} Doorman. All rights reserved.
-                  </span>
-                  <ThemeToggle size='sm' />
+              <footer className='border-t'>
+                <div className='container mx-auto px-4 py-8'>
+                  <div className='flex items-center justify-center gap-2'>
+                    <span className='text-muted-foreground'>
+                      © {new Date().getFullYear()} Doorman. All rights
+                      reserved.
+                    </span>
+                    <ThemeToggle size='sm' />
+                  </div>
                 </div>
-              </div>
-            </footer>
-            <Toaster />
-          </div>
+              </footer>
+              <Toaster />
+            </div>
+          </NuqsAdapter>
         </ThemeProvider>
       </body>
     </html>

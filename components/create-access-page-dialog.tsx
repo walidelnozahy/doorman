@@ -1,8 +1,7 @@
 'use client';
 
-import type React from 'react';
-
-import { useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useActionState, useEffect, startTransition } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -11,169 +10,237 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { AlertCircle, Loader2 } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Page } from '@/utils/types';
+import { Loader2, Plus, PlusIcon } from 'lucide-react';
+import { createAccessPage } from '@/app/actions/create-access-page';
+import { parseAsBoolean, useQueryState } from 'nuqs';
+import { FormGlobalError } from '@/components/form-field-error';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { Form, FormField } from './ui/form';
+import { useToast } from '@/hooks/use-toast';
+import {
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+  FormDescription,
+} from '@/components/ui/form';
+import { createPageSchema } from '@/utils/schema/create-page-schema';
+import { useQueryClient } from '@tanstack/react-query';
 
-type CreateAccessPageModalProps = {
-  isOpen: boolean;
-  onClose: () => void;
-  onCreateAccessPage: (data: Page) => Promise<void>;
-  isLoading: boolean;
+/**
+import { useQueryState } from 'nuqs';
+ * This hook is used to manage the state of the create access page dialog
+ * It is used to open and close the dialog
+ * It is also used to reset the dialog state when the dialog is closed
+ * @returns {isOpen: boolean, setIsOpen: (isOpen: boolean) => void}
+ */
+const useCreateAccessPageDialog = () => {
+  const [isOpen, setIsOpen] = useQueryState(
+    'create-access-page',
+    parseAsBoolean,
+  );
+
+  return {
+    isOpen,
+    setIsOpen,
+  };
 };
 
-const defaultData = {
-  title: '',
-  provider_account_id: '',
-  permissions: {},
-  note: '',
-};
-
-export function CreateAccessPageDialog({
-  isOpen,
-  onClose,
-  onCreateAccessPage,
-  isLoading,
-}: CreateAccessPageModalProps) {
-  const [formData, setFormData] = useState<Page>(defaultData);
-  const [permissionsText, setPermissionsText] = useState('');
-  const [error, setError] = useState<string | null>(null);
-
-  const validateAccountId = (value: string) => {
-    const accountIdRegex = /^\d{12}$/;
-    if (!accountIdRegex.test(value)) {
-      setError('Account ID must be exactly 12 digits');
-      return false;
-    }
-    setError(null);
-    return true;
-  };
-
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    const { name, value } = e.target;
-    if (name === 'permissions') {
-      setPermissionsText(value);
-      try {
-        const parsedPermissions = JSON.parse(value);
-        setFormData((prev) => ({ ...prev, permissions: parsedPermissions }));
-        setError(null);
-      } catch (err) {
-        setError('Invalid JSON format');
-      }
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
-      if (name !== 'account_id') {
-        setError(null);
-      }
-    }
-  };
-
-  const handleAccountIdBlur = () => {
-    validateAccountId(formData.provider_account_id);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateAccountId(formData.provider_account_id)) {
-      return;
-    }
-    try {
-      await onCreateAccessPage(formData);
-      setFormData(defaultData);
-      setPermissionsText('');
-    } catch (err) {
-      setError('Invalid JSON in permissions field');
-    }
-  };
+/**
+ * This component is used to create a button that opens the create access page dialog
+ * @returns {React.ReactNode}
+ */
+export const CreateAccessPageButton = () => {
+  const { setIsOpen } = useCreateAccessPageDialog();
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Button onClick={() => setIsOpen(true)}>
+      <PlusIcon className='mr-2 h-4 w-4' /> Create Access Page
+    </Button>
+  );
+};
+
+const INITIAL_FORM_VALUES = {
+  title: '',
+  provider_account_id: '',
+  permissions: '',
+  note: '',
+};
+const INITIAL_STATE = {
+  data: null,
+  errors: null,
+  success: false,
+};
+
+export function CreateAccessPageDialog() {
+  const { isOpen, setIsOpen } = useCreateAccessPageDialog();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const form = useForm<z.infer<typeof createPageSchema>>({
+    resolver: zodResolver(createPageSchema),
+    defaultValues: INITIAL_FORM_VALUES,
+  });
+
+  const [formState, formAction, pending] = useActionState(
+    createAccessPage,
+    INITIAL_STATE,
+  );
+
+  // Handle dialog close with form reset
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      form.reset();
+    }
+    setIsOpen(open);
+  };
+
+  const onSubmit = async (data: z.infer<typeof createPageSchema>) => {
+    // You can do additional frontend validation here
+    try {
+      // Convert form data to FormData for the server action
+      const formData = new FormData();
+      Object.entries(data).forEach(([key, value]) => {
+        formData.append(key, value);
+      });
+
+      // Call the server action inside startTransition
+      startTransition(() => {
+        formAction(formData);
+      });
+    } catch (error) {
+      console.error('Form submission error:', error);
+      // Handle any client-side errors
+    }
+  };
+
+  // Effect to handle server-side errors
+  useEffect(() => {
+    // Handle success
+    if (formState?.success) {
+      toast({
+        title: 'Success!',
+        description: 'Access page created successfully.',
+        variant: 'default',
+      });
+      setIsOpen(null);
+      queryClient.invalidateQueries({ queryKey: ['pages'] });
+      form.reset();
+    }
+
+    // Handle errors
+    const errorKeys = Object.keys(formState?.errors || {});
+    errorKeys.forEach((errorKey) => {
+      // Type guard to check if the key exists in the errors object
+      if (formState?.errors && errorKey in formState.errors) {
+        const errorArray = formState.errors[
+          errorKey as keyof typeof formState.errors
+        ] as string[];
+
+        if (errorArray && errorArray.length > 0) {
+          form.setError(errorKey as any, {
+            message: errorArray[0],
+          });
+        }
+      }
+    });
+  }, [formState]);
+
+  const formFields = [
+    {
+      name: 'title' as const,
+      label: 'Title',
+      description: 'Name displayed to your users.',
+      component: Input,
+      props: {
+        placeholder: 'Production Database Access',
+      },
+    },
+    {
+      name: 'provider_account_id' as const,
+      label: 'AWS Account ID',
+      description: '12-digit AWS account ID for permissions.',
+      component: Input,
+      props: {
+        pattern: '\\d{12}',
+        placeholder: '123456789012',
+      },
+    },
+    {
+      name: 'permissions' as const,
+      label: 'CloudFormation Stack Permissions Policy',
+      description:
+        'JSON policy defining user access to CloudFormation resources.',
+      component: Textarea,
+      props: {
+        className: 'font-mono text-sm min-h-[300px]',
+        placeholder: `{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": [
+      "cloudformation:DescribeStacks",
+      "cloudformation:DescribeStackEvents",
+      "cloudformation:DescribeStackResource",
+      "cloudformation:DescribeStackResources"
+    ],
+    "Resource": "*"
+  }]
+}`,
+      },
+    },
+    {
+      name: 'note' as const,
+      label: 'Note',
+      description: 'Additional information visible to users.',
+      component: Input,
+      props: {
+        placeholder: 'Read-only access to CloudFormation resources',
+      },
+    },
+  ];
+
+  return (
+    <Dialog open={!!isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className='sm:max-w-[600px]'>
         <DialogHeader>
           <DialogTitle>Create Access Page</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className='space-y-4'>
-          <div className='space-y-4'>
-            <div className='space-y-2'>
-              <Label htmlFor='title'>Title</Label>
-              <Input
-                id='title'
-                name='title'
-                placeholder='Enter a descriptive title for this access page'
-                value={formData.title}
-                onChange={handleInputChange}
-                required
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+            {formFields.map((field) => (
+              <FormField
+                key={field.name}
+                control={form.control}
+                name={field.name}
+                render={({ field: formField }) => (
+                  <FormItem>
+                    <FormLabel>{field.label}</FormLabel>
+                    <FormControl>
+                      <field.component {...formField} {...field.props} />
+                    </FormControl>
+                    <FormDescription>{field.description}</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='provider_account_id'>Account ID</Label>
-              <Input
-                id='provider_account_id'
-                name='provider_account_id'
-                placeholder='Enter 12-digit AWS account ID (e.g., 012345678901)'
-                value={formData.provider_account_id}
-                onChange={handleInputChange}
-                onBlur={handleAccountIdBlur}
-                required
-                pattern='\d{12}'
-                maxLength={12}
-              />
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='permissions'>Permissions (JSON)</Label>
-              <Textarea
-                id='permissions'
-                name='permissions'
-                placeholder={`{
-    "Version": "2012-10-17",
-    "Statement": [{
-        "Effect": "Allow",
-        "Action": [
-            "cloudformation:CreateChangeSet"
-        ],
-        "Resource": "arn:aws:cloudformation:region:aws:transform/Serverless-2016-10-31"
-    }]
-}`}
-                value={permissionsText}
-                onChange={handleInputChange}
-                required
-                className='font-mono text-sm min-h-[300px]'
-              />
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='note'>Note</Label>
-              <Input
-                id='note'
-                name='note'
-                placeholder='Add any additional notes or instructions for users'
-                value={formData.note}
-                onChange={handleInputChange}
-              />
-            </div>
-          </div>
-          {error && (
-            <Alert variant='destructive'>
-              <AlertCircle className='h-4 w-4' />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          <div className='flex justify-end'>
-            <Button type='submit' disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <span className='mr-2'>Creating...</span>
+            ))}
+
+            <FormGlobalError error={formState?.errors} />
+
+            <div className='flex justify-end'>
+              <Button type='submit' disabled={pending}>
+                {pending ? (
                   <Loader2 className='h-4 w-4 animate-spin' />
-                </>
-              ) : (
-                'Create Access Page'
-              )}
-            </Button>
-          </div>
-        </form>
+                ) : (
+                  <Plus className='h-4 w-4' />
+                )}
+                <span className='ml-2'>Create Access Page</span>
+              </Button>
+            </div>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

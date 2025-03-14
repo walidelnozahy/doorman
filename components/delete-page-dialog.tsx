@@ -1,3 +1,4 @@
+'use client';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -8,25 +9,85 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { useQueryState } from 'nuqs';
+import { useState } from 'react';
+import { deleteAccessPage } from '@/app/actions/delete-access-page';
+import { useQueryClient } from '@tanstack/react-query';
 
-interface DeletePageDialogProps {
-  isOpen: boolean;
-  isLoading: boolean;
-  pageName: string;
-  onClose: () => void;
-  onConfirm: () => void;
-}
+export const useDeletePageDialog = () => {
+  const [pageName, setPageName] = useQueryState('delete-page-name');
+  const [pageId, setPageId] = useQueryState('delete-page-id');
 
-export function DeletePageDialog({
-  isOpen,
-  isLoading,
-  pageName,
-  onClose,
-  onConfirm,
-}: DeletePageDialogProps) {
+  const isOpen = !!pageName && !!pageId;
+  const toggleIsOpen = (pageId?: string, pageName?: string) => {
+    if (pageId && pageName) {
+      setPageName(pageName);
+      setPageId(pageId);
+    } else {
+      setPageName(null);
+      setPageId(null);
+    }
+  };
+  return {
+    pageName,
+    pageId,
+    isOpen,
+    toggleIsOpen,
+  };
+};
+
+export function DeletePageDialog() {
+  const { pageId, pageName, isOpen, toggleIsOpen } = useDeletePageDialog();
+  const { toast } = useToast();
+  const [pending, setPending] = useState(false);
+  const queryClient = useQueryClient();
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.preventDefault();
+
+    if (!pageId) return;
+
+    try {
+      setPending(true);
+      const result = await deleteAccessPage(pageId);
+
+      if (result.success) {
+        toast({
+          title: 'Success',
+          description: 'Page deleted successfully',
+          variant: 'default',
+        });
+        queryClient.invalidateQueries({ queryKey: ['pages'] });
+        toggleIsOpen();
+      } else if (result.error?._global) {
+        toast({
+          title: 'Error',
+          description: result.error._global,
+          variant: 'destructive',
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'An unexpected error occurred',
+        variant: 'destructive',
+      });
+    } finally {
+      setPending(false);
+    }
+  };
+
   return (
-    <AlertDialog open={isOpen} onOpenChange={onClose}>
+    <AlertDialog
+      open={!!isOpen}
+      onOpenChange={(open) => {
+        if (!pending || !open) {
+          toggleIsOpen();
+        }
+      }}
+    >
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
@@ -35,14 +96,16 @@ export function DeletePageDialog({
             all associated data.
           </AlertDialogDescription>
         </AlertDialogHeader>
+
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
           <AlertDialogAction
-            onClick={onConfirm}
-            disabled={isLoading}
+            onClick={handleDelete}
+            disabled={pending}
             className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+            type='button'
           >
-            {isLoading ? (
+            {pending ? (
               <>
                 <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                 <span>Deleting...</span>

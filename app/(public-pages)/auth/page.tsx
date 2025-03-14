@@ -1,4 +1,4 @@
-import { signInSignUpWithOtpAction } from '@/app/actions';
+import { signInSignUpWithOtpAction } from '@/app/actions/auth';
 import { FormMessage, Message } from '@/components/form-message';
 import { SubmitButton } from '@/components/submit-button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
