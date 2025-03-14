@@ -18,7 +18,7 @@ import { ConnectButton } from '@/components/connect-button';
 export default async function AccessRequestPage({
   params,
 }: {
-  params: { ids: string[] };
+  params: Promise<{ ids: string[] }>;
 }) {
   // Await params if needed in your setup
   const resolvedParams = await params;
