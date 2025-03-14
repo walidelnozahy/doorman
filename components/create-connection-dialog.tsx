@@ -115,8 +115,7 @@ export function CreateConnectionDialog({
       }
     });
   }, [formState, setIsOpen, toast, form]);
-  console.log('formState', formState);
-  console.log('form', form);
+
   return (
     <Dialog open={!!isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className='sm:max-w-[500px]'>

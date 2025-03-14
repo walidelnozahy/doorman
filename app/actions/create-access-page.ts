@@ -21,7 +21,7 @@ export async function createAccessPage(prevState: any, formData: FormData) {
      * Check if user is authenticated
      */
     const supabase = await createClient();
-    // console.log('supabase', supabase);
+
     // Get authenticated user
     const user = await getAuthenticatedUser(supabase);
 
@@ -94,7 +94,6 @@ export async function createAccessPage(prevState: any, formData: FormData) {
     revalidatePath('/pages'); // Revalidate cache to refresh data
     return { data: createdPage, errors: null, success: true };
   } catch (error) {
-    console.log('err', error);
     return {
       data: null,
       errors: { _global: 'Failed to create page' },
