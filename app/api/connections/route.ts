@@ -23,7 +23,7 @@ export async function PUT(req: Request) {
         },
       ],
       {
-        onConflict: 'connection_id',
+        onConflict: 'connection_id,page_id', // Changed to use both columns
         ignoreDuplicates: false,
       },
     );
