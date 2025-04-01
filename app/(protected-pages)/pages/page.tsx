@@ -6,6 +6,9 @@ import { fetchPages } from '@/utils/server-fetchers';
 import { Suspense } from 'react';
 import { CreateAccessPageButton } from '@/components/create-access-page-button';
 
+// Add this export to explicitly mark the page as dynamic
+export const dynamic = 'force-dynamic';
+
 export default async function Pages() {
   let pages: Page[] = [];
   let error: Error | null = null;
@@ -26,6 +29,7 @@ export default async function Pages() {
         </div>
 
         <ListPageCards error={error} pages={pages} />
+
         <CreateAccessPageDialog />
         <DeletePageDialog />
       </div>

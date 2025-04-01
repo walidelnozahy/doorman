@@ -10,7 +10,7 @@ export async function fetchPages(): Promise<Page[]> {
     const supabase = await createClient();
     // Get authenticated user
     const user = await getAuthenticatedUser(supabase);
-
+    console.log('user', user);
     const { data, error } = await supabase
       .from('pages')
       .select('*')
