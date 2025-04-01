@@ -11,7 +11,6 @@ import { OpenInNewTabButton } from '@/components/open-in-new-tab-button';
 import { fetchPage } from '@/utils/server-fetchers';
 import { fetchConnections } from '@/utils/server-fetchers';
 import { CreateConnectionButton } from '@/components/create-connection-button';
-import { origin } from '@/config';
 import { Suspense } from 'react';
 
 type PageDetailsProps = {
@@ -88,7 +87,7 @@ export default async function PageDetails({ params }: PageDetailsProps) {
 
                 {/* Right Column - Permissions */}
                 <div>
-                  <h3 className='text-sm font-medium text-muted-foreground mb-1 flex items-center mb-2'>
+                  <h3 className='text-sm font-medium text-muted-foreground flex items-center mb-2'>
                     <Shield className='h-4 w-4 mr-1.5' />
                     Permissions
                   </h3>

@@ -102,19 +102,34 @@ export async function fetchConnectionById(
 }
 
 // Fetch a public page by ID (no authentication required)
-export async function fetchPublicPage(pageId: string): Promise<Page | null> {
+export async function fetchPublicPage(
+  pageIdOrSlug: string,
+): Promise<Page | null> {
   try {
     const supabase = await createClient();
 
-    const { data, error } = await supabase
+    // Try fetching by ID first
+    let { data, error } = await supabase
       .from('pages')
       .select('*')
-      .eq('id', pageId)
+      .eq('id', pageIdOrSlug)
       .single();
 
     if (error) {
+      // If not found by ID, try fetching by slug
+      const slugResult = await supabase
+        .from('pages')
+        .select('*')
+        .eq('slug', pageIdOrSlug)
+        .single();
+
+      data = slugResult.data;
+      error = slugResult.error;
+    }
+
+    if (error) {
       if (error.code === 'PGRST116') {
-        return null; // No rows found
+        return null; // No rows found by either ID or slug
       }
       throw error;
     }

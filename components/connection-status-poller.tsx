@@ -37,8 +37,7 @@ export function ConnectionStatusPoller({
       setIsLoading(true);
       try {
         const { data, error } = await getConnection(pageId, connectionId);
-        console.log('data', data);
-        console.log('error', error);
+        
         if (isMounted) {
           if (error) {
             setError(error);

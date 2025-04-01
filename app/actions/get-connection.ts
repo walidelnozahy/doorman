@@ -24,7 +24,7 @@ export async function getConnection(
       .eq('page_id', pageId)
       .eq('connection_id', connectionId)
       .single();
-    console.log('error', error);
+    
     if (error) {
       if (error.code === 'PGRST116') {
         // No rows found - return null data but no error

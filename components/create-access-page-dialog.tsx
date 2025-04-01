@@ -5,16 +5,16 @@ import { useActionState, useEffect, startTransition } from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Plus, PlusIcon } from 'lucide-react';
+import { Loader2, Plus } from 'lucide-react';
 import { createAccessPage } from '@/app/actions/create-access-page';
-import { parseAsBoolean, useQueryState } from 'nuqs';
-import { FormGlobalError } from '@/components/form-field-error';
+
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Form, FormField } from './ui/form';
@@ -27,47 +27,91 @@ import {
   FormDescription,
 } from '@/components/ui/form';
 import { createPageSchema } from '@/utils/schema/create-page-schema';
-import { useQueryClient } from '@tanstack/react-query';
+import { useCreateAccessPageDialog } from '@/hooks/use-create-access-page-dialog';
+import React from 'react';
+import { origin } from '@/config';
+import { RenderAccessPage } from './render-access-page';
 
-/**
-import { useQueryState } from 'nuqs';
- * This hook is used to manage the state of the create access page dialog
- * It is used to open and close the dialog
- * It is also used to reset the dialog state when the dialog is closed
- * @returns {isOpen: boolean, setIsOpen: (isOpen: boolean) => void}
- */
-const useCreateAccessPageDialog = () => {
-  const [isOpen, setIsOpen] = useQueryState(
-    'create-access-page',
-    parseAsBoolean,
-  );
+const DEFAULT_PERMISSIONS = `{
+"Version": "2012-10-17",
+"Statement": [{
+  "Effect": "Allow",
+  "Action": [
+    "cloudformation:DescribeStacks",
+    "cloudformation:DescribeStackEvents",
+    "cloudformation:DescribeStackResource",
+    "cloudformation:DescribeStackResources"
+  ],
+  "Resource": "*"
+}]
+}`;
+const formFields = [
+  {
+    name: 'slug' as const,
+    label: 'Custom Slug',
+    description: "Customize the last part of your page's URL",
+    component: Input,
+    defaultValue: '',
+    props: {
+      prefix: `${origin}/`,
+      placeholder: 'custom-path',
+      pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$', // simple kebab-case validator
+    },
+    transform: (value: string) => {
+      // Convert spaces to dashes and ensure kebab-case format
+      return value
+        .toLowerCase()
+        .replace(/ /g, '-') // Replace spaces with dashes
+        .replace(/[^a-z0-9-]/g, '') // Remove any characters that aren't lowercase letters, numbers, or dashes
+        .replace(/-+/g, '-'); // Replace multiple consecutive dashes with a single dash
+    },
+  },
 
-  return {
-    isOpen,
-    setIsOpen,
-  };
-};
+  {
+    name: 'title' as const,
+    label: 'Title',
+    description: 'Name displayed to your users.',
+    component: Input,
+    defaultValue: '',
+    props: {
+      placeholder: 'Production Database Access',
+    },
+  },
+  {
+    name: 'provider_account_id' as const,
+    label: 'AWS Account ID',
+    description: '12-digit AWS account ID for permissions.',
+    component: Input,
+    defaultValue: '',
+    props: {
+      pattern: '\\d{12}',
+      placeholder: '123456789012',
+    },
+  },
+  {
+    name: 'permissions' as const,
+    label: 'CloudFormation Stack Permissions Policy',
+    description:
+      'JSON policy defining user access to CloudFormation resources.',
+    component: Textarea,
+    defaultValue: DEFAULT_PERMISSIONS,
+    props: {
+      className: 'font-mono text-sm min-h-[300px]',
+      placeholder: DEFAULT_PERMISSIONS,
+    },
+  },
+  {
+    name: 'note' as const,
+    label: 'Note',
+    description: 'Additional information visible to users.',
+    component: Input,
+    defaultValue: '',
+    props: {
+      placeholder: 'Read-only access to CloudFormation resources',
+    },
+  },
+];
 
-/**
- * This component is used to create a button that opens the create access page dialog
- * @returns {React.ReactNode}
- */
-export const CreateAccessPageButton = () => {
-  const { setIsOpen } = useCreateAccessPageDialog();
-
-  return (
-    <Button onClick={() => setIsOpen(true)}>
-      <PlusIcon className='mr-2 h-4 w-4' /> Create Access Page
-    </Button>
-  );
-};
-
-const INITIAL_FORM_VALUES = {
-  title: '',
-  provider_account_id: '',
-  permissions: '',
-  note: '',
-};
 const INITIAL_STATE = {
   data: null,
   errors: null,
@@ -77,10 +121,13 @@ const INITIAL_STATE = {
 export function CreateAccessPageDialog() {
   const { isOpen, setIsOpen } = useCreateAccessPageDialog();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+
   const form = useForm<z.infer<typeof createPageSchema>>({
+    mode: 'onBlur',
     resolver: zodResolver(createPageSchema),
-    defaultValues: INITIAL_FORM_VALUES,
+    defaultValues: Object.fromEntries(
+      formFields.map((field) => [field.name, field.defaultValue]),
+    ),
   });
 
   const [formState, formAction, pending] = useActionState(
@@ -125,122 +172,135 @@ export function CreateAccessPageDialog() {
         variant: 'default',
       });
       setIsOpen(null);
-      queryClient.invalidateQueries({ queryKey: ['pages'] });
       form.reset();
     }
 
-    // Handle errors
-    const errorKeys = Object.keys(formState?.errors || {});
-    errorKeys.forEach((errorKey) => {
-      // Type guard to check if the key exists in the errors object
-      if (formState?.errors && errorKey in formState.errors) {
-        const errorArray = formState.errors[
-          errorKey as keyof typeof formState.errors
-        ] as string[];
+    // Handle global errors with toast
+    if (formState?.errors && Object.keys(formState.errors).length > 0) {
+      // Check if there are any global errors (not field-specific)
+      const globalErrors =
+        formState.errors && '_global' in formState.errors
+          ? formState.errors._global
+          : undefined;
 
-        if (errorArray && errorArray.length > 0) {
+      if (globalErrors && globalErrors.length > 0) {
+        toast({
+          title: 'Error',
+          description: globalErrors,
+          variant: 'destructive',
+        });
+      }
+
+      // Handle field-specific errors
+      const errorKeys = Object.keys(formState.errors).filter(
+        (key) => key !== 'global' && key !== '_global',
+      );
+
+      errorKeys.forEach((errorKey) => {
+        if (formState.errors && errorKey in formState.errors) {
+          const errorValue =
+            formState.errors[errorKey as keyof typeof formState.errors];
+
+          const errorMessage = Array.isArray(errorValue)
+            ? errorValue[0]
+            : (errorValue as string);
+
           form.setError(errorKey as any, {
-            message: errorArray[0],
+            message: errorMessage,
           });
         }
-      }
-    });
-  }, [formState]);
-
-  const formFields = [
-    {
-      name: 'title' as const,
-      label: 'Title',
-      description: 'Name displayed to your users.',
-      component: Input,
-      props: {
-        placeholder: 'Production Database Access',
-      },
-    },
-    {
-      name: 'provider_account_id' as const,
-      label: 'AWS Account ID',
-      description: '12-digit AWS account ID for permissions.',
-      component: Input,
-      props: {
-        pattern: '\\d{12}',
-        placeholder: '123456789012',
-      },
-    },
-    {
-      name: 'permissions' as const,
-      label: 'CloudFormation Stack Permissions Policy',
-      description:
-        'JSON policy defining user access to CloudFormation resources.',
-      component: Textarea,
-      props: {
-        className: 'font-mono text-sm min-h-[300px]',
-        placeholder: `{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Action": [
-      "cloudformation:DescribeStacks",
-      "cloudformation:DescribeStackEvents",
-      "cloudformation:DescribeStackResource",
-      "cloudformation:DescribeStackResources"
-    ],
-    "Resource": "*"
-  }]
-}`,
-      },
-    },
-    {
-      name: 'note' as const,
-      label: 'Note',
-      description: 'Additional information visible to users.',
-      component: Input,
-      props: {
-        placeholder: 'Read-only access to CloudFormation resources',
-      },
-    },
-  ];
+      });
+    }
+  }, [formState, toast, setIsOpen, form]);
+  const formValues = form.watch();
 
   return (
     <Dialog open={!!isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className='sm:max-w-[600px]'>
+      <DialogContent className='sm:max-w-[1200px] flex flex-col max-h-[90vh]'>
         <DialogHeader>
           <DialogTitle>Create Access Page</DialogTitle>
         </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-            {formFields.map((field) => (
-              <FormField
-                key={field.name}
-                control={form.control}
-                name={field.name}
-                render={({ field: formField }) => (
-                  <FormItem>
-                    <FormLabel>{field.label}</FormLabel>
-                    <FormControl>
-                      <field.component {...formField} {...field.props} />
-                    </FormControl>
-                    <FormDescription>{field.description}</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            ))}
-
-            <FormGlobalError error={formState?.errors} />
-
-            <div className='flex justify-end'>
-              <Button type='submit' disabled={pending}>
-                {pending ? (
-                  <Loader2 className='h-4 w-4 animate-spin' />
-                ) : (
-                  <Plus className='h-4 w-4' />
-                )}
-                <span className='ml-2'>Create Access Page</span>
-              </Button>
+        <div className='grid grid-cols-2 gap-8 relative overflow-y-auto '>
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className='grid grid-cols-2 gap-4 auto-rows-min'
+            >
+              {formFields.map((field, index) => (
+                <FormField
+                  key={field.name}
+                  control={form.control}
+                  name={field.name}
+                  render={({ field: formField }) => (
+                    <FormItem
+                      className={`${
+                        field.name === 'title' ||
+                        field.name === 'provider_account_id'
+                          ? 'col-span-1'
+                          : 'col-span-2'
+                      }`}
+                    >
+                      <FormLabel>{field.label}</FormLabel>
+                      <FormControl className='ml-1'>
+                        <field.component
+                          {...formField}
+                          {...field.props}
+                          onChange={(
+                            e: React.ChangeEvent<
+                              HTMLInputElement | HTMLTextAreaElement
+                            >,
+                          ) => {
+                            // Apply transform function if it exists
+                            if (field.transform && 'value' in e.target) {
+                              e.target.value = field.transform(e.target.value);
+                            }
+                            formField.onChange(e);
+                          }}
+                        />
+                      </FormControl>
+                      <FormDescription className='text-xs'>
+                        {field.description}
+                      </FormDescription>
+                      <FormMessage className='text-xs ' />
+                    </FormItem>
+                  )}
+                />
+              ))}
+            </form>
+          </Form>
+          {/* <Separator orientation='vertical' /> */}
+          <div className='flex flex-col space-y-2'>
+            <div className='flex justify-between'>
+              <h3 className='font-semibold'>Preview</h3>
+              <span className='text-xs text-muted-foreground'>
+                {origin}/{formValues.slug}
+              </span>
             </div>
-          </form>
-        </Form>
+            <div className='bg-muted/50 rounded-sm'>
+              <RenderAccessPage
+                pageData={{
+                  ...formValues,
+                  permissions: JSON.parse(formValues.permissions),
+                }}
+                isViewOnly
+              />
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button
+            type='button'
+            onClick={form.handleSubmit(onSubmit)}
+            disabled={pending}
+          >
+            {pending ? (
+              <Loader2 className='h-4 w-4 animate-spin' />
+            ) : (
+              <Plus className='h-4 w-4' />
+            )}
+            <span className='ml-2'>Create Access Page</span>
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

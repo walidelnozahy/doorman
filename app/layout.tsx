@@ -3,10 +3,10 @@ import { ThemeProvider } from 'next-themes';
 import Link from 'next/link';
 import { ThemeToggle } from '@/components/theme-toggle';
 import AuthButton from '@/components/header-auth';
-import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import { origin } from '@/config';
+import './globals.css';
 
 export const metadata = {
   metadataBase: new URL(origin),

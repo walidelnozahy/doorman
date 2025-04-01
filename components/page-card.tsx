@@ -30,7 +30,7 @@ import { Badge } from '@/components/ui/badge';
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import { useEffect, useState } from 'react';
 import { fetchConnections } from '@/app/actions/fetch-connections';
-import { origin } from '@/config';
+import { hostName, origin } from '@/config';
 
 interface PageCardProps {
   page: Page;
@@ -42,7 +42,8 @@ export function PageCard({ page, onDeleteClick }: PageCardProps) {
   const [connectionCount, setConnectionCount] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const pageUrl = `${origin || ''}/${page.id}`;
+  const pageUrl = `${hostName || ''}/${page.slug}`;
+  const urlToOpen = `${origin || ''}/${page.slug}`;
 
   // Fetch connections using server action
   useEffect(() => {
@@ -66,7 +67,7 @@ export function PageCard({ page, onDeleteClick }: PageCardProps) {
   const accountNumber = page.provider_account_id;
 
   return (
-    <Link href={`/pages/${page.id}`} className='block'>
+    <Link href={`/pages/${page.id}`} className='block' suppressHydrationWarning>
       <Card className='overflow-hidden hover:shadow-md transition-all duration-200 hover:bg-accent/20 cursor-pointer h-[150px] flex flex-col'>
         <CardHeader className='pb-2'>
           <div className='flex justify-between items-center gap-4'>
@@ -104,7 +105,7 @@ export function PageCard({ page, onDeleteClick }: PageCardProps) {
                     <DropdownMenuItem
                       onClick={(e) => {
                         e.preventDefault();
-                        window.open(pageUrl, '_blank');
+                        window.open(urlToOpen, '_blank');
                       }}
                     >
                       <ExternalLink className='h-4 w-4 mr-2' />
@@ -126,11 +127,6 @@ export function PageCard({ page, onDeleteClick }: PageCardProps) {
               </div>
             </div>
           </div>
-          {/* {page.note && (
-            <CardDescription className='line-clamp-2 h-10 mt-4'>
-              {page.note}
-            </CardDescription>
-          )} */}
         </CardHeader>
         <CardContent className='pb-2 flex-grow'>
           {page.note ? (
@@ -144,7 +140,11 @@ export function PageCard({ page, onDeleteClick }: PageCardProps) {
         <div className='border-t border-border mt-auto'></div>
         <CardFooter className='px-6 py-2 flex justify-between items-center'>
           <div className='flex items-center text-muted-foreground text-xs gap-1'>
-            <span className='truncate max-w-[180px]'>{pageUrl}</span>
+            <span className='max-w-[150px]'>
+              {pageUrl.length > 30
+                ? `${pageUrl.slice(0, 15)}...${pageUrl.slice(-15)}`
+                : pageUrl}
+            </span>
             <div className='flex items-center'>
               <Button
                 variant='ghost'
@@ -164,7 +164,7 @@ export function PageCard({ page, onDeleteClick }: PageCardProps) {
                 className='h-6 w-6'
                 onClick={(e) => {
                   e.preventDefault();
-                  window.open(pageUrl, '_blank');
+                  window.open(urlToOpen, '_blank');
                 }}
               >
                 <ExternalLink className='h-3 w-3' />
@@ -174,7 +174,7 @@ export function PageCard({ page, onDeleteClick }: PageCardProps) {
           </div>
           <div className='flex items-center text-muted-foreground text-sm'>
             <GlobeLockIcon className='h-3.5 w-3.5 mr-2' />
-            <span>
+            <span className='truncate'>
               {isLoading ? (
                 <span className='inline-block w-4 h-3 bg-muted animate-pulse rounded'></span>
               ) : (

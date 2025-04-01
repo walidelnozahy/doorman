@@ -1,4 +1,5 @@
 export interface Page {
+  slug?: string;
   id?: string; // Optional for new entries, required for updates
   user_id?: string;
   title: string;

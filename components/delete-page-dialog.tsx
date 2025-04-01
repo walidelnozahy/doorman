@@ -14,7 +14,6 @@ import { Loader2 } from 'lucide-react';
 import { useQueryState } from 'nuqs';
 import { useState } from 'react';
 import { deleteAccessPage } from '@/app/actions/delete-access-page';
-import { useQueryClient } from '@tanstack/react-query';
 
 export const useDeletePageDialog = () => {
   const [pageName, setPageName] = useQueryState('delete-page-name');
@@ -42,7 +41,6 @@ export function DeletePageDialog() {
   const { pageId, pageName, isOpen, toggleIsOpen } = useDeletePageDialog();
   const { toast } = useToast();
   const [pending, setPending] = useState(false);
-  const queryClient = useQueryClient();
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -59,7 +57,7 @@ export function DeletePageDialog() {
           description: 'Page deleted successfully',
           variant: 'default',
         });
-        queryClient.invalidateQueries({ queryKey: ['pages'] });
+
         toggleIsOpen();
       } else if (result.error?._global) {
         toast({

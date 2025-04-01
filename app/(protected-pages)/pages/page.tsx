@@ -1,12 +1,10 @@
 import type { Page } from '@/utils/types';
-import {
-  CreateAccessPageButton,
-  CreateAccessPageDialog,
-} from '@/components/create-access-page-dialog';
+import { CreateAccessPageDialog } from '@/components/create-access-page-dialog';
 import { DeletePageDialog } from '@/components/delete-page-dialog';
 import { ListPageCards } from '@/components/list-page-cards';
 import { fetchPages } from '@/utils/server-fetchers';
 import { Suspense } from 'react';
+import { CreateAccessPageButton } from '@/components/create-access-page-button';
 
 export default async function Pages() {
   let pages: Page[] = [];
@@ -28,7 +26,6 @@ export default async function Pages() {
         </div>
 
         <ListPageCards error={error} pages={pages} />
-
         <CreateAccessPageDialog />
         <DeletePageDialog />
       </div>

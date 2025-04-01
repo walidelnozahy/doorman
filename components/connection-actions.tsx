@@ -55,8 +55,8 @@ export function ConnectionActions({
         </div>
       )}
 
-      <div className='flex items-center justify-center space-y-2 pt-4'>
-        {connectionData?.status === 'connected' && (
+      {connectionData?.status === 'connected' && (
+        <div className='flex items-center justify-center space-y-2 pt-4'>
           <div className='rounded-lg border border-emerald-200/30 bg-emerald-50/30 p-4 text-center w-full dark:border-emerald-400/30 dark:bg-emerald-900/20'>
             <CheckCircle2Icon className='h-6 w-6 mx-auto mb-2 text-emerald-600 dark:text-emerald-400' />
             <p className='font-medium text-emerald-700 dark:text-emerald-300'>
@@ -66,8 +66,8 @@ export function ConnectionActions({
               You can now close this window.
             </p>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </>
   );
 }

@@ -50,11 +50,7 @@ export function ConnectButton({
             pageData.template_url + `&param_ConnectionId=${connectionId || ''}`;
           window.open(url, '_blank');
         }}
-        disabled={
-          !pageData.template_url ||
-          !connectionId ||
-          connectionStatus === 'connecting'
-        }
+        disabled={!pageData.template_url || connectionStatus === 'connecting'}
       >
         Connect AWS Account
         <ArrowRightIcon className='ml-2 h-5 w-5' />
