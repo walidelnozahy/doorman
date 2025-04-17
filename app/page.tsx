@@ -1,6 +1,5 @@
 import RootLayout from '@/components/root-layout';
 import { Button } from '@/components/ui/button';
-import { ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 
 export default async function Home() {
