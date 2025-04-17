@@ -37,18 +37,33 @@ export const updateSession = async (request: NextRequest) => {
 
     // This will refresh session if expired - required for Server Components
     // https://supabase.com/docs/guides/auth/server-side/nextjs
-    const user = await supabase.auth.getUser();
-    const isAuthenticated = !user.error;
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+    const isAuthenticated = !!user && !error;
     const isAuthPage = request.nextUrl.pathname.startsWith('/auth');
     const isAppPage = request.nextUrl.pathname.startsWith('/pages');
 
+    // Log authentication state for debugging
+    console.log('Middleware auth check:', {
+      isAuthenticated,
+      isAuthPage,
+      isAppPage,
+      path: request.nextUrl.pathname,
+      hasUser: !!user,
+      hasError: !!error,
+    });
+
     // Redirect authenticated users away from auth pages to app
     if (isAuthPage && isAuthenticated) {
+      console.log('Redirecting authenticated user from auth page to /pages');
       return NextResponse.redirect(new URL('/pages', request.url));
     }
 
     // Redirect unauthenticated users to auth page only when trying to access /pages routes
     if (isAppPage && !isAuthenticated) {
+      console.log('Redirecting unauthenticated user from app page to /auth');
       return NextResponse.redirect(new URL('/auth', request.url));
     }
 
@@ -56,7 +71,7 @@ export const updateSession = async (request: NextRequest) => {
   } catch (e) {
     // If you are here, a Supabase client could not be created!
     // This is likely because you have not set up environment variables.
-    // Check out http://localhost:3000 for Next Steps.
+    console.error('Middleware error:', e);
     return NextResponse.next({
       request: {
         headers: request.headers,

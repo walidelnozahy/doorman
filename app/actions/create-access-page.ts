@@ -1,8 +1,7 @@
 'use server';
 
-import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
-import { generateTemplate } from '@/utils/queries';
+import { generateTemplate } from '@/lib/generate-template';
 import { createClient } from '@/lib/supabase/server';
 import { getAuthenticatedUser } from '@/lib/supabase/get-authenticate-user';
 import { createPageSchema } from '@/utils/schema/create-page-schema';
@@ -15,7 +14,7 @@ import { createPageSchema } from '@/utils/schema/create-page-schema';
  * 5. Update page with template URL
  * 6. Revalidate cache
  */
-export async function createAccessPage(prevState: any, formData: FormData) {
+export async function createAccessPage(formData: FormData) {
   let createdPage = null;
   const supabase = await createClient();
   try {

@@ -3,8 +3,8 @@ import * as React from 'react';
 import { cn } from '@/utils/cn';
 
 export interface InputProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {
-  prefix?: string;
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'prefix'> {
+  prefix?: React.ReactNode;
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(

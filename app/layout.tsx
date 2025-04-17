@@ -5,11 +5,11 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import AuthButton from '@/components/header-auth';
 import { Toaster } from '@/components/ui/toaster';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
-import { origin } from '@/config';
+import config from '@/config';
 import './globals.css';
 
 export const metadata = {
-  metadataBase: new URL(origin),
+  metadataBase: new URL(config.origin),
   title: 'Doorman - Secure AWS Access Management',
   description:
     'Doorman makes it easy to securely request and manage access to your users’ AWS accounts with a simple, shareable link.',
@@ -20,7 +20,7 @@ const geistSans = Geist({
   subsets: ['latin'],
 });
 
-export default async function RootLayout({
+export default async function Layout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -35,35 +35,8 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           <NuqsAdapter>
-            <div className='min-h-screen flex flex-col'>
-              <nav className='border-b'>
-                <div className='container mx-auto py-4 flex justify-between items-center'>
-                  <Link href='/' className='text-2xl font-bold text-primary'>
-                    Doorman
-                  </Link>
-                  <div className='flex items-center space-x-4'>
-                    <AuthButton />
-                  </div>
-                </div>
-              </nav>
-
-              <main className='flex-grow flex'>
-                <div className='container mx-auto w-full'>{children}</div>
-              </main>
-
-              <footer className='border-t'>
-                <div className='container mx-auto px-4 py-8'>
-                  <div className='flex items-center justify-center gap-2'>
-                    <span className='text-muted-foreground'>
-                      © {new Date().getFullYear()} Doorman. All rights
-                      reserved.
-                    </span>
-                    <ThemeToggle size='sm' />
-                  </div>
-                </div>
-              </footer>
-              <Toaster />
-            </div>
+            <div className='min-h-screen flex flex-col'>{children}</div>
+            <Toaster />
           </NuqsAdapter>
         </ThemeProvider>
       </body>

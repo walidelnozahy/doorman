@@ -2,8 +2,12 @@ import { notFound } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { RefreshCwIcon, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { fetchPublicPage, fetchConnectionById } from '@/utils/server-fetchers';
-import { RenderAccessPage } from '@/components/render-access-page';
+import { fetchPublicPage } from '@/lib/supabase/access-pages/get';
+import { RenderAccessPage } from '@/components/features/access-pages/components/render-access-page';
+import { fetchConnectionById } from '@/lib/supabase/connections/get';
+import { ErrorState } from '@/components/error-state';
+import config from '@/config';
+import Link from 'next/link';
 
 export default async function AccessRequestPage({
   params,
@@ -16,7 +20,25 @@ export default async function AccessRequestPage({
   const connectionId = resolvedParams.ids?.[1];
 
   if (!pageId) {
-    return notFound();
+    return (
+      <div className='min-h-screen flex flex-col items-center justify-center animate-fade-in'>
+        <ErrorState
+          title='Page Not Found'
+          description='The requested access page could not be found.'
+        />
+        <div className='mt-8 flex items-center justify-center animate-fade-up-delay-200'>
+          <div className='text-xs text-muted-foreground/60 flex items-center space-x-1'>
+            <span>Powered by</span>
+            <Link
+              href={config.appUrl}
+              className='font-medium text-primary/80 hover:underline'
+            >
+              Doorman
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   try {
@@ -24,7 +46,25 @@ export default async function AccessRequestPage({
     const pageData = await fetchPublicPage(pageId);
 
     if (!pageData) {
-      return notFound();
+      return (
+        <div className='min-h-screen flex flex-col items-center justify-center animate-fade-in'>
+          <ErrorState
+            title='Page Not Found'
+            description='The requested access page could not be found.'
+          />
+          <div className='mt-8 flex items-center justify-center animate-fade-up-delay-200'>
+            <div className='text-xs text-muted-foreground/60 flex items-center space-x-1'>
+              <span>Powered by</span>
+              <Link
+                href={config.appUrl}
+                className='font-medium text-primary/80 hover:underline'
+              >
+                Doorman
+              </Link>
+            </div>
+          </div>
+        </div>
+      );
     }
 
     // Fetch initial connection data if connectionId is provided
@@ -35,31 +75,47 @@ export default async function AccessRequestPage({
     }
 
     return (
-      <RenderAccessPage pageData={pageData} connectionData={connectionData} />
+      <div className='min-h-screen flex flex-col items-center justify-center animate-fade-in'>
+        <div className='animate-fade-up'>
+          <RenderAccessPage
+            pageData={pageData}
+            connectionData={connectionData}
+            connectionId={connectionId}
+          />
+        </div>
+        <div className='mt-8 flex items-center justify-center animate-fade-up-delay-200'>
+          <div className='text-xs text-muted-foreground/60 flex items-center space-x-1'>
+            <span>Powered by</span>
+            <Link
+              href={config.appUrl}
+              className='font-medium text-primary/80 hover:underline'
+              target='_blank'
+            >
+              Doorman
+            </Link>
+          </div>
+        </div>
+      </div>
     );
   } catch (error) {
     return (
-      <div className='min-h-screen flex items-center justify-center p-4'>
-        <div className='w-full max-w-md space-y-4'>
-          <Alert variant='destructive'>
-            <AlertCircle className='h-4 w-4' />
-            <AlertTitle>Failed to load access page</AlertTitle>
-            <AlertDescription>
-              {error instanceof Error
-                ? error.message
-                : 'There was a problem loading the access page. Please try again.'}
-            </AlertDescription>
-          </Alert>
-          <div className='text-center'>
-            <Button
-              variant='outline'
-              size='lg'
-              onClick={() => window.location.reload()}
-              className='min-w-[140px]'
+      <div className='min-h-screen flex flex-col items-center justify-center animate-fade-in'>
+        <div className='animate-fade-up'>
+          <ErrorState
+            title='Failed to load access page'
+            description='There was a problem loading the access page. Please try again.'
+            error={error instanceof Error ? error : undefined}
+          />
+        </div>
+        <div className='mt-8 flex items-center justify-center animate-fade-up-delay-200'>
+          <div className='text-xs text-muted-foreground/60 flex items-center space-x-1'>
+            <span>Powered by</span>
+            <Link
+              href={config.appUrl}
+              className='font-medium text-primary/80 hover:underline'
             >
-              <RefreshCwIcon className='mr-2 h-4 w-4' />
-              Try Again
-            </Button>
+              Doorman
+            </Link>
           </div>
         </div>
       </div>

@@ -1,11 +1,22 @@
-export const origin =
-  typeof window !== 'undefined'
-    ? window.origin
-    : process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : 'http://localhost:3000';
+const isBrowser = typeof window !== 'undefined';
+const isDev = process.env.NODE_ENV === 'development';
 
-export const hostName =
-  typeof window !== 'undefined'
-    ? window.location.host
-    : process.env.NEXT_PUBLIC_API_ORIGIN || 'localhost:3000';
+let host: string;
+
+if (isBrowser) {
+  host = window.location.host;
+} else {
+  const vercelUrl = !isDev && process.env.VERCEL_URL;
+  host = vercelUrl ? vercelUrl : 'localhost:3000';
+}
+
+const protocol = isDev ? 'http' : 'https';
+const origin = `${protocol}://${host}`;
+const appUrl = 'https://www.doorman.cloud';
+export default {
+  isDev,
+  isBrowser,
+  host,
+  origin,
+  appUrl,
+};

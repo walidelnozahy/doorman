@@ -1,45 +1,104 @@
-import { Badge } from './ui/badge';
 import { cn } from '@/utils/cn';
+import { ConnectionStatus } from '@/utils/types';
 
-export const StatusBadge = ({
+// Map connection status to StatusBadge status
+export const getStatusBadgeStatus = (status: ConnectionStatus) => {
+  switch (status) {
+    case 'connected':
+      return 'active';
+    case 'connecting':
+    case 'disconnecting':
+      return 'pending';
+    case 'disconnected':
+      return 'inactive';
+    default:
+      return 'inactive';
+  }
+};
+
+interface StatusBadgeProps {
+  status: 'active' | 'inactive' | 'pending' | 'error';
+  showText?: boolean;
+  size?: 'sm' | 'md' | 'lg';
+  className?: string;
+  text?: string;
+}
+
+const statusConfig = {
+  active: {
+    dotColor: 'bg-emerald-500/70',
+    pulseColor: 'bg-emerald-400/40',
+    textColor: 'text-emerald-500',
+    defaultText: 'Active',
+  },
+  inactive: {
+    dotColor: 'bg-muted-foreground/30',
+    pulseColor: 'bg-muted-foreground/20',
+    textColor: 'text-muted-foreground',
+    defaultText: 'Inactive',
+  },
+  pending: {
+    dotColor: 'bg-orange-500/70',
+    pulseColor: 'bg-orange-400/40',
+    textColor: 'text-orange-500',
+    defaultText: 'Pending',
+  },
+  error: {
+    dotColor: 'bg-destructive/70',
+    pulseColor: 'bg-destructive/40',
+    textColor: 'text-destructive',
+    defaultText: 'Error',
+  },
+} as const;
+
+const sizeConfig = {
+  sm: {
+    dotSize: 'h-1.5 w-1.5',
+    textSize: 'text-xs',
+    gap: 'gap-2',
+  },
+  md: {
+    dotSize: 'h-2 w-2',
+    textSize: 'text-sm',
+    gap: 'gap-2.5',
+  },
+  lg: {
+    dotSize: 'h-2.5 w-2.5',
+    textSize: 'text-base',
+    gap: 'gap-3',
+  },
+} as const;
+
+export function StatusBadge({
   status,
-  variant = 'success',
-}: {
-  status: string;
-  variant?: 'success' | 'destructive' | 'outline';
-}) => {
-  const normalizedStatus = status.toLowerCase();
+  showText = true,
+  size = 'md',
+  className,
+  text,
+}: StatusBadgeProps) {
+  const { dotColor, pulseColor, textColor, defaultText } = statusConfig[status];
+  const { dotSize, textSize, gap } = sizeConfig[size];
 
-  // Determine the appropriate styling based on status
-  const getStatusStyles = () => {
-    switch (normalizedStatus) {
-      case 'connected':
-        return { indicator: 'bg-green-500' };
-      case 'disconnected':
-        return { indicator: 'bg-red-500' };
-      case 'connecting':
-      case 'disconnecting':
-        return {
-          indicator: 'bg-orange-500 animate-pulse',
-        };
-      default:
-        return { indicator: 'bg-gray-500' };
-    }
-  };
-
-  const { indicator } = getStatusStyles();
-
-  // Capitalize first letter
-  const displayStatus =
-    status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+  const displayText = text || defaultText;
 
   return (
-    <Badge
-      variant={variant as any}
-      className='flex items-center gap-1.5 px-2 w-fit'
-    >
-      <div className={cn('w-2 h-2 rounded-full', indicator)}></div>
-      {displayStatus}
-    </Badge>
+    <div className={cn('flex items-center', gap, className)}>
+      <div className='relative flex'>
+        <span
+          className={cn(
+            'animate-ping absolute inline-flex h-full w-full rounded-full',
+            pulseColor,
+          )}
+        />
+        <span
+          className={cn('relative inline-flex rounded-full', dotSize, dotColor)}
+        />
+      </div>
+      {showText && (
+        <span className={cn('font-medium', textSize, textColor)}>
+          {displayText}
+        </span>
+      )}
+    </div>
   );
-};
+}

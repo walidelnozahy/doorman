@@ -1,6 +1,6 @@
 export interface Page {
   slug?: string;
-  id?: string; // Optional for new entries, required for updates
+  id: string; // Optional for new entries, required for updates
   user_id?: string;
   title: string;
   provider_account_id: string;
@@ -17,7 +17,7 @@ export interface Connection {
   consumer_account_id: string;
   connection_id: string;
   created_at?: string; // Automatically set by Supabase
-  status?: 'connecting' | 'connected' | 'disconnecting' | 'disconnected';
+  status?: ConnectionStatus;
 }
 
 export interface TemplateRequest {
@@ -27,3 +27,9 @@ export interface TemplateRequest {
   providerAccountId: string;
   permissions: any;
 }
+
+export type ConnectionStatus =
+  | 'connected'
+  | 'connecting'
+  | 'disconnecting'
+  | 'disconnected';
