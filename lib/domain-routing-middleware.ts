@@ -14,8 +14,6 @@ export async function handleDomainRoutingMiddleware(req: NextRequest) {
         '',
       );
 
-  console.log('hostname', hostname);
-  console.log('process.env', process.env);
   if (!hostname || isInternal) {
     return NextResponse.next();
   }

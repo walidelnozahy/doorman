@@ -45,16 +45,6 @@ export const updateSession = async (request: NextRequest) => {
     const isAuthPage = request.nextUrl.pathname.startsWith('/auth');
     const isAppPage = request.nextUrl.pathname.startsWith('/pages');
 
-    // Log authentication state for debugging
-    console.log('Middleware auth check:', {
-      isAuthenticated,
-      isAuthPage,
-      isAppPage,
-      path: request.nextUrl.pathname,
-      hasUser: !!user,
-      hasError: !!error,
-    });
-
     // Redirect authenticated users away from auth pages to app
     if (isAuthPage && isAuthenticated) {
       console.log('Redirecting authenticated user from auth page to /pages');
@@ -64,7 +54,12 @@ export const updateSession = async (request: NextRequest) => {
     // Redirect unauthenticated users to auth page only when trying to access /pages routes
     if (isAppPage && !isAuthenticated) {
       console.log('Redirecting unauthenticated user from app page to /auth');
-      return NextResponse.redirect(new URL('/auth', request.url));
+      const url = new URL('/auth', request.url);
+      // Preserve query parameters and hash from original URL
+      url.search = request.nextUrl.search;
+      url.hash = request.nextUrl.hash;
+
+      return NextResponse.redirect(url);
     }
 
     return response;

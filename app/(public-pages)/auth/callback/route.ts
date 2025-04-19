@@ -10,15 +10,35 @@ export async function GET(request: Request) {
   const origin = requestUrl.origin;
   const redirectTo = requestUrl.searchParams.get('redirect_to')?.toString();
 
+  // Check for error parameters
+  const error = requestUrl.searchParams.get('error');
+  const errorDescription = requestUrl.searchParams.get('error_description');
+
+  // If there's an error, redirect to auth page with just the error description
+  if (error) {
+    // Get error description or use a default message
+    const errorMessage =
+      errorDescription || 'Authentication failed. Please try again.';
+
+    // Create an absolute URL with ONLY the error message as a query parameter
+    const authUrl = new URL(`${origin}/auth`);
+    authUrl.searchParams.set('error', errorMessage);
+
+    // Use a 302 redirect with an absolute URL
+    return NextResponse.redirect(authUrl.toString(), 302);
+  }
+
   if (code) {
     const supabase = await createClient();
     await supabase.auth.exchangeCodeForSession(code);
   }
 
   if (redirectTo) {
-    return NextResponse.redirect(`${origin}${redirectTo}`);
+    // Ensure redirectTo doesn't have hash parameters
+    const cleanRedirectUrl = new URL(redirectTo, origin);
+    return NextResponse.redirect(cleanRedirectUrl.toString(), 302);
   }
 
   // URL to redirect to after sign up process completes
-  return NextResponse.redirect(`${origin}/pages`);
+  return NextResponse.redirect(`${origin}/pages`, 302);
 }
