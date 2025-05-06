@@ -28,8 +28,8 @@ export function ConnectionsTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Provider Account</TableHead>
-            <TableHead>Consumer Account</TableHead>
+            <TableHead>Provider AWS Account</TableHead>
+            <TableHead>Consumer AWS Account</TableHead>
             <TableHead>Connection ID</TableHead>
             <TableHead>Created</TableHead>
             <TableHead>Status</TableHead>

@@ -2,12 +2,16 @@ import { notFound } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { RefreshCwIcon, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { fetchPublicPage } from '@/lib/supabase/access-pages/get';
+import {
+  fetchPageByDomain,
+  fetchPublicPageById,
+} from '@/lib/supabase/access-pages/get';
 import { RenderAccessPage } from '@/components/features/access-pages/components/render-access-page';
 import { fetchConnectionById } from '@/lib/supabase/connections/get';
 import { ErrorState } from '@/components/error-state';
 import config from '@/config';
 import Link from 'next/link';
+import { headers } from 'next/headers';
 
 export default async function AccessRequestPage({
   params,
@@ -18,6 +22,9 @@ export default async function AccessRequestPage({
   const resolvedParams = await params;
   const pageId = resolvedParams.ids?.[0];
   const connectionId = resolvedParams.ids?.[1];
+  let pageData;
+
+  pageData = await fetchPublicPageById(pageId);
 
   if (!pageId) {
     return (
@@ -43,7 +50,6 @@ export default async function AccessRequestPage({
 
   try {
     // Fetch page data
-    const pageData = await fetchPublicPage(pageId);
 
     if (!pageData) {
       return (

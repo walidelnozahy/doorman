@@ -49,6 +49,7 @@ export default async function PageDetails({ params }: PageDetailsProps) {
   let page;
   let connections;
   let domains;
+
   try {
     const [pageResult, connectionsResult, domainsResult] =
       await Promise.allSettled([
@@ -179,16 +180,26 @@ export default async function PageDetails({ params }: PageDetailsProps) {
                             value={`${config.origin}/${page.id}`}
                             size='sm'
                           />
+                          <OpenInNewTabButton
+                            path={`${config.origin}/${page.id}`}
+                            size='sm'
+                            variant='ghost'
+                          />
                         </div>
                         {domains && domains.length > 0 && (
                           <div className='flex items-center gap-2 text-sm text-muted-foreground/60 group'>
                             <Globe className='h-4 w-4' />
                             <span className='max-w-[280px] truncate group-hover:text-muted-foreground/80 transition-colors duration-300'>
-                              {`https://${domains[0].domain}`}
+                              {`${domains[0].domain}`}
                             </span>
                             <CopyButton
                               value={`https://${domains[0].domain}`}
                               size='sm'
+                            />
+                            <OpenInNewTabButton
+                              path={`https://${domains[0].domain}`}
+                              size='sm'
+                              variant='ghost'
                             />
                             {domains[0].is_verified ? (
                               <StatusBadge

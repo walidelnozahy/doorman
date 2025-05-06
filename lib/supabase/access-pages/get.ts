@@ -51,9 +51,47 @@ export async function fetchPage(pageId: string): Promise<Page | null> {
   }
 }
 
-// Fetch a public page by ID (no authentication required)
-export async function fetchPublicPage(
-  pageIdOrSlug: string,
+// Fetch a page by domain (no authentication required)
+export async function fetchPageByDomain(domain: string): Promise<Page | null> {
+  try {
+    const supabase = await createClient();
+
+    // First, look up the page_id associated with this domain
+    const { data: domainRecord, error: domainError } = await supabase
+      .from('custom_domains')
+      .select('page_id')
+      .eq('domain', domain)
+      .eq('is_verified', true)
+      .single();
+
+    if (domainError || !domainRecord?.page_id) {
+      return null;
+    }
+
+    // Then fetch the page using the page_id
+    const { data: page, error: pageError } = await supabase
+      .from('pages')
+      .select('*')
+      .eq('id', domainRecord.page_id)
+      .single();
+
+    if (pageError) {
+      if (pageError.code === 'PGRST116') {
+        return null; // No rows found
+      }
+      throw pageError;
+    }
+
+    return page as Page;
+  } catch (error) {
+    console.error('Error fetching page by domain:', error);
+    throw error;
+  }
+}
+
+// Fetch a public page by ID or domain (no authentication required)
+export async function fetchPublicPageById(
+  pageIdOrDomain: string,
 ): Promise<Page | null> {
   try {
     const supabase = await createClient();
@@ -62,27 +100,8 @@ export async function fetchPublicPage(
     let { data, error } = await supabase
       .from('pages')
       .select('*')
-      .eq('id', pageIdOrSlug)
+      .eq('id', pageIdOrDomain)
       .single();
-
-    if (error) {
-      // If not found by ID, try fetching by slug
-      const slugResult = await supabase
-        .from('pages')
-        .select('*')
-        .eq('slug', pageIdOrSlug)
-        .single();
-
-      data = slugResult.data;
-      error = slugResult.error;
-    }
-
-    if (error) {
-      if (error.code === 'PGRST116') {
-        return null; // No rows found by either ID or slug
-      }
-      throw error;
-    }
 
     return data as Page;
   } catch (error) {
