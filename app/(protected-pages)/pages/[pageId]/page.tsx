@@ -19,13 +19,20 @@ import { fetchPage } from '@/lib/supabase/access-pages/get';
 import { fetchConnections } from '@/lib/supabase/connections/get';
 import { Suspense } from 'react';
 import { AddDomainTrigger } from '@/components/features/custom-domains/add-domain-trigger';
-import { CreateConnectionTrigger } from '@/components/features/connections/create-connection-trigger';
 import { AccessPageDetailsSkeleton } from '@/components/features/access-pages/components/access-page-details-skeleton';
 import { fetchCustomDomains } from '@/app/actions/fetch-custom-domains';
 import { CopyButton } from '@/components/copy-button';
 import { StatusBadge } from '@/components/status-badge';
 import config from '@/config';
 import { DomainStatusCard } from '@/components/features/custom-domains/components/domain-status-card';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+  BreadcrumbPage,
+} from '@/components/ui/breadcrumb';
 
 type PageDetailsProps = {
   params: Promise<{ pageId: string }>;
@@ -108,115 +115,131 @@ export default async function PageDetails({ params }: PageDetailsProps) {
   return (
     <Suspense fallback={<AccessPageDetailsSkeleton />}>
       <div className='flex flex-col min-h-screen bg-background'>
-        <header className='bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10 sticky top-0'>
-          <div className='container flex h-16 items-center justify-between py-12'>
-            <h1 className='text-2xl font-semibold'>{page.title}</h1>
-            <div className='flex items-center gap-2'>
-              <CopyButton
-                value={pageId}
-                variant='outline'
-                className='bg-background-secondary'
-              />
-              <OpenInNewTabButton
-                path={`/${pageId}`}
-                variant='outline'
-                className='bg-background-secondary'
-              />
+        {/* Header with Breadcrumb and Title */}
+        <div className='container pt-8 mb-8'>
+          <div className='flex flex-col gap-2 w-full'>
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink href='/pages'>Access Pages</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>{page.title}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+            <div className='flex items-center justify-between mt-1'>
+              <h1 className='text-2xl font-bold text-foreground'>
+                {page.title}
+              </h1>
+              <div className='flex items-center gap-2'>
+                <CopyButton value={pageId} variant='outline' />
+                <OpenInNewTabButton path={`/${pageId}`} variant='outline' />
+              </div>
             </div>
           </div>
-        </header>
+        </div>
 
         <main className='flex-1 container mb-12 space-y-8'>
           {/* Page Details Card */}
           <div className='grid grid-cols-1 lg:grid-cols-7 gap-6'>
             {/* Left column - Details */}
             <div className='lg:col-span-4 space-y-6'>
-              <Card>
-                <CardHeader>
-                  <CardTitle className='text-lg'>Details</CardTitle>
+              <Card className='px-5 py-6 rounded-xl shadow-sm border border-border/80'>
+                <CardHeader className='px-0 py-0 mb-4'>
+                  <CardTitle className='text-xl font-semibold'>
+                    Details
+                  </CardTitle>
                 </CardHeader>
-                <CardContent className='space-y-6'>
-                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                <CardContent className='px-0 py-0'>
+                  <div className='grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4'>
                     <div>
-                      <p className='text-sm text-muted-foreground mb-1'>
+                      <p className='text-xs text-muted-foreground mb-1 font-medium'>
                         Title
                       </p>
-                      <p>{page.title}</p>
+                      <p className='text-base text-foreground font-semibold'>
+                        {page.title}
+                      </p>
                     </div>
                     <div>
-                      <p className='text-sm text-muted-foreground mb-1'>
+                      <p className='text-xs text-muted-foreground mb-1 font-medium'>
                         AWS Account
                       </p>
-                      <p className='font-mono'>{page.provider_account_id}</p>
+                      <p className='font-mono text-base text-foreground'>
+                        {page.provider_account_id}
+                      </p>
                     </div>
                     <div>
-                      <p className='text-sm text-muted-foreground mb-1'>
+                      <p className='text-xs text-muted-foreground mb-1 font-medium'>
                         Created
                       </p>
-                      <p>{formatDate(page.created_at || '')}</p>
+                      <p className='text-base text-foreground'>
+                        {formatDate(page.created_at || '')}
+                      </p>
                     </div>
                     {page.note && (
-                      <div>
-                        <p className='text-sm text-muted-foreground mb-1'>
+                      <div className='md:col-span-2'>
+                        <p className='text-xs text-muted-foreground mb-1 font-medium'>
                           Notes
                         </p>
-                        <p className='whitespace-pre-wrap'>{page.note}</p>
+                        <p className='whitespace-pre-wrap text-sm bg-accent/10 rounded px-3 py-2'>
+                          {page.note}
+                        </p>
                       </div>
                     )}
                   </div>
 
-                  <div className='space-y-4 border-t pt-4'>
-                    <div>
-                      <p className='text-sm text-muted-foreground mb-2'>
-                        Access URLs
-                      </p>
-                      <div className='space-y-2'>
-                        <div className='flex items-center gap-2 text-sm text-muted-foreground/60 group'>
-                          <GlobeLockIcon className='h-4 w-4' />
-                          <span className='max-w-[280px] truncate group-hover:text-muted-foreground/80 transition-colors duration-300'>
-                            {`${config.origin}/${page.id}`}
-                          </span>
+                  <div className='space-y-3 border-t pt-5 mt-6'>
+                    <p className='text-xs text-muted-foreground mb-2 font-medium'>
+                      Access URLs
+                    </p>
+                    <div className='flex flex-col gap-2'>
+                      <div className='flex items-center gap-2 px-3 py-2 rounded-lg bg-accent/5 border border-border/60'>
+                        <GlobeLockIcon className='h-4 w-4 text-primary/80' />
+                        <span className='max-w-[220px] truncate font-mono text-[13px] text-foreground/90'>{`${config.origin}/${page.id}`}</span>
+                        <CopyButton
+                          value={`${config.origin}/${page.id}`}
+                          size='icon'
+                          className='h-5 w-5  hover:text-primary'
+                          variant='ghost'
+                        />
+                        <OpenInNewTabButton
+                          path={`${config.origin}/${page.id}`}
+                          size='icon'
+                          variant='ghost'
+                        />
+                      </div>
+                      {domains && domains.length > 0 && (
+                        <div className='flex items-center gap-2 px-3 py-2 rounded-lg bg-accent/5 border border-border/60'>
+                          <Globe className='h-4 w-4 text-primary/80' />
+                          <span className='max-w-[220px] truncate font-mono text-[13px] text-foreground/90'>{`${domains[0].domain}`}</span>
                           <CopyButton
-                            value={`${config.origin}/${page.id}`}
-                            size='sm'
-                          />
-                          <OpenInNewTabButton
-                            path={`${config.origin}/${page.id}`}
-                            size='sm'
+                            value={`https://${domains[0].domain}`}
+                            size='icon'
+                            className='h-5 w-5 hover:text-primary'
                             variant='ghost'
                           />
+                          <OpenInNewTabButton
+                            path={`https://${domains[0].domain}`}
+                            size='icon'
+                            variant='ghost'
+                          />
+                          {domains[0].is_verified ? (
+                            <StatusBadge
+                              status='active'
+                              size='sm'
+                              text='Verified'
+                            />
+                          ) : (
+                            <StatusBadge
+                              status='pending'
+                              size='sm'
+                              text='Pending'
+                            />
+                          )}
                         </div>
-                        {domains && domains.length > 0 && (
-                          <div className='flex items-center gap-2 text-sm text-muted-foreground/60 group'>
-                            <Globe className='h-4 w-4' />
-                            <span className='max-w-[280px] truncate group-hover:text-muted-foreground/80 transition-colors duration-300'>
-                              {`${domains[0].domain}`}
-                            </span>
-                            <CopyButton
-                              value={`https://${domains[0].domain}`}
-                              size='sm'
-                            />
-                            <OpenInNewTabButton
-                              path={`https://${domains[0].domain}`}
-                              size='sm'
-                              variant='ghost'
-                            />
-                            {domains[0].is_verified ? (
-                              <StatusBadge
-                                status='active'
-                                size='sm'
-                                text='Verified'
-                              />
-                            ) : (
-                              <StatusBadge
-                                status='pending'
-                                size='sm'
-                                text='Pending'
-                              />
-                            )}
-                          </div>
-                        )}
-                      </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -224,40 +247,38 @@ export default async function PageDetails({ params }: PageDetailsProps) {
 
               {/* Connection Stats */}
               <div className='grid grid-cols-3 gap-4'>
-                <Card>
-                  <CardContent className='pt-6'>
-                    <div className='flex flex-col gap-1'>
-                      <p className='text-sm text-muted-foreground'>
-                        Total Connections
+                <Card className='px-5 py-4 rounded-xl shadow-sm border border-border/80 flex flex-col items-center justify-center'>
+                  <CardContent className='p-0 flex flex-col items-center'>
+                    <p className='text-xs text-muted-foreground mb-1'>
+                      Total Connections
+                    </p>
+                    <p className='text-2xl font-bold text-foreground'>
+                      {connections.length}
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card className='px-5 py-4 rounded-xl shadow-sm border border-border/80 flex flex-col items-center justify-center'>
+                  <CardContent className='p-0 flex flex-col items-center'>
+                    <div className='flex items-center gap-2 mb-1'>
+                      <div className='w-2 h-2 rounded-full bg-emerald-500/70'></div>
+                      <p className='text-xs text-muted-foreground'>Connected</p>
+                    </div>
+                    <p className='text-2xl font-bold text-foreground'>
+                      {connectedCount}
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card className='px-5 py-4 rounded-xl shadow-sm border border-border/80 flex flex-col items-center justify-center'>
+                  <CardContent className='p-0 flex flex-col items-center'>
+                    <div className='flex items-center gap-2 mb-1'>
+                      <div className='w-2 h-2 rounded-full bg-destructive/70'></div>
+                      <p className='text-xs text-muted-foreground'>
+                        Disconnected
                       </p>
-                      <p className='text-3xl font-bold'>{connections.length}</p>
                     </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className='pt-6'>
-                    <div className='flex flex-col gap-1'>
-                      <div className='flex items-center gap-2'>
-                        <div className='w-2 h-2 rounded-full bg-emerald-500/70'></div>
-                        <p className='text-sm text-muted-foreground'>
-                          Connected
-                        </p>
-                      </div>
-                      <p className='text-3xl font-bold'>{connectedCount}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className='pt-6'>
-                    <div className='flex flex-col gap-1'>
-                      <div className='flex items-center gap-2'>
-                        <div className='w-2 h-2 rounded-full bg-destructive/70'></div>
-                        <p className='text-sm text-muted-foreground'>
-                          Disconnected
-                        </p>
-                      </div>
-                      <p className='text-3xl font-bold'>{disconnectedCount}</p>
-                    </div>
+                    <p className='text-2xl font-bold text-foreground'>
+                      {disconnectedCount}
+                    </p>
                   </CardContent>
                 </Card>
               </div>
@@ -315,9 +336,6 @@ export default async function PageDetails({ params }: PageDetailsProps) {
                     Manage your AWS account connections
                   </p>
                 </div>
-                <CreateConnectionTrigger
-                  providerAccountId={page.provider_account_id}
-                />
               </div>
               {connections && connections.length > 0 ? (
                 <ConnectionsTable connections={connections} pageId={pageId} />

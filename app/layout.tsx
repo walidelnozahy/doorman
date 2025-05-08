@@ -1,8 +1,5 @@
 import { Geist } from 'next/font/google';
 import { ThemeProvider } from 'next-themes';
-import Link from 'next/link';
-import { ThemeToggle } from '@/components/theme-toggle';
-import AuthButton from '@/components/header-auth';
 import { Toaster } from '@/components/ui/toaster';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import config from '@/config';
@@ -26,7 +23,11 @@ export default async function Layout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang='en' className={geistSans.className} suppressHydrationWarning>
+    <html
+      lang='en'
+      className={`${geistSans.className} scroll-smooth`}
+      suppressHydrationWarning
+    >
       <body className='bg-background text-foreground'>
         <ThemeProvider
           attribute='class'

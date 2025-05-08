@@ -29,9 +29,7 @@ import {
 } from '@/components/ui/form';
 import { createPageSchema } from '@/utils/schema/create-page-schema';
 import { useCreateAccessPageDialog } from '@/hooks/use-create-access-page-dialog';
-import React from 'react';
 import config from '@/config';
-import { RenderAccessPage } from './render-access-page';
 
 const DEFAULT_PERMISSIONS = `{
 "Version": "2012-10-17",
@@ -228,7 +226,7 @@ export function CreateAccessPageDialog() {
 
   return (
     <Dialog open={!!isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className='sm:max-w-[1200px] flex flex-col max-h-[90vh]'>
+      <DialogContent className='sm:max-w-[1000px] flex flex-col max-h-[90vh]'>
         <DialogHeader>
           <DialogTitle>Create Access Page</DialogTitle>
         </DialogHeader>

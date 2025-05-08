@@ -26,7 +26,7 @@ export const RenderAccessPage = ({
           </p>
         </div>
 
-        <Card className='border border-border/50 shadow-lg bg-background-secondary overflow-hidden'>
+        <Card className='border border-border/50 shadow-lg overflow-hidden'>
           <CardContent className='space-y-8 pt-6'>
             <div className='space-y-6'>
               <div className='flex items-start space-x-4'>

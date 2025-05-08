@@ -22,13 +22,13 @@ export default async function Pages() {
   return (
     <Suspense fallback={<AccessPagesSkeleton />}>
       <div className='mx-auto py-10 flex flex-col animate-fade-in'>
-        <div className='flex justify-between items-center mb-6 animate-fade-up'>
+        <div className='flex justify-between items-center mb-6'>
           <h1 className='text-2xl font-bold'>Access Pages</h1>
           <CreateAccessPageTrigger />
         </div>
 
         {error ? (
-          <div className='flex-1 flex items-center justify-center animate-fade-up'>
+          <div className='flex-1 flex items-center justify-center'>
             <ErrorState
               title='Unable to Load Pages'
               description='There was an error loading your access pages.'
@@ -45,12 +45,7 @@ export default async function Pages() {
         ) : (
           <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
             {pages.map((page: Page, index: number) => (
-              <div
-                key={page.id}
-                className={`animate-fade-up-delay-${(index % 3) * 100}`}
-              >
-                <AccessPageCard page={page} />
-              </div>
+              <AccessPageCard key={page.id} page={page} />
             ))}
           </div>
         )}
