@@ -6,10 +6,31 @@ import config from '@/config';
 import './globals.css';
 
 export const metadata = {
-  metadataBase: new URL(config.origin),
-  title: 'Doorman - Secure AWS Access Management',
+  title: 'Doorman · Secure AWS Access Management',
   description:
-    'Doorman makes it easy to securely request and manage access to your users’ AWS accounts with a simple, shareable link.',
+    "Doorman makes it easy to securely request and manage access to your users' AWS accounts with a simple, shareable link.",
+  openGraph: {
+    title: 'Doorman · Secure AWS Access Management',
+    description:
+      "Doorman makes it easy to securely request and manage access to your users' AWS accounts with a simple, shareable link.",
+    url: config.appUrl,
+    images: [
+      {
+        url: '/meta.png',
+        width: 800,
+        height: 600,
+        alt: 'Doorman - Secure AWS Access Management',
+      },
+    ],
+    siteName: 'Doorman · Secure AWS Access Management',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Doorman · Secure AWS Access Management',
+    description:
+      "Doorman makes it easy to securely request and manage access to your users' AWS accounts with a simple, shareable link.",
+  },
 };
 
 const geistSans = Geist({
