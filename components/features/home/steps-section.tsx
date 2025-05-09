@@ -1,30 +1,50 @@
 'use client';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useIsVisible } from '@/components/hooks/use-is-visible';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+} from '@/components/ui/carousel';
+import Autoplay from 'embla-carousel-autoplay';
 
 const steps = [
   {
     title: 'Create and Publish',
     description:
       'Create your access page, set required permissions, and publish with a few clicks.',
-    image: '/placeholder-dashboard-1.png',
+    image: '/step-01.png',
   },
   {
     title: 'Share with Users',
     description: 'Send your users to the access page through the shared link.',
-    image: '/placeholder-dashboard-2.png',
+    image: '/step-02.png',
   },
   {
     title: 'Connect Accounts',
     description:
       'Users grant you least-privileged access to their AWS accounts.',
-    image: '/placeholder-dashboard-3.png',
+    image: '/step-03.png',
   },
 ];
 
 export function StepsSection() {
   const ref = useRef<HTMLElement | null>(null);
   const isVisible = useIsVisible(ref);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const plugin = useRef(Autoplay({ delay: 3000, stopOnInteraction: true }));
+  const emblaApiRef = useRef<any>(null);
+
+  // Update active index on slide change
+  const handleSetApi = (api: any) => {
+    emblaApiRef.current = api;
+    if (api) {
+      setActiveIndex(api.selectedScrollSnap());
+      api.on('select', () => setActiveIndex(api.selectedScrollSnap()));
+    }
+  };
 
   return (
     <div
@@ -41,30 +61,55 @@ export function StepsSection() {
           </p>
         </div>
 
-        <div className='grid grid-cols-1 md:grid-cols-3 gap-8'>
-          {steps.map((step, index) => (
-            <div key={index} className='relative group'>
-              <div className='flex flex-col items-center text-center'>
-                {/* Step number circle */}
-                <div className='w-10 h-10 rounded-full bg-muted flex items-center justify-center mb-4 group-hover:bg-muted/80 transition-colors'>
-                  <span className='text-foreground font-medium'>
-                    {index + 1}
-                  </span>
-                </div>
-
-                {/* Content */}
-                <div className='space-y-3'>
-                  <h3 className='text-lg font-medium'>{step.title}</h3>
-                  <p className='text-sm text-muted-foreground'>
-                    {step.description}
-                  </p>
-                </div>
-
-                {/* Image placeholder */}
-                <div className='mt-6 bg-muted rounded-lg aspect-video w-full group-hover:bg-muted/80 transition-colors' />
-              </div>
+        <div className='w-full max-w-3xl mx-auto relative'>
+          <Carousel
+            plugins={[plugin.current]}
+            opts={{ align: 'center', loop: true }}
+            setApi={handleSetApi}
+            className='w-full'
+            onMouseEnter={plugin.current.stop}
+            onMouseLeave={plugin.current.reset}
+          >
+            <CarouselContent>
+              {steps.map((step, index) => (
+                <CarouselItem key={index}>
+                  <div className='flex flex-col items-center bg-card rounded-2xl shadow-lg p-6 group'>
+                    <img
+                      src={step.image}
+                      alt={step.title}
+                      className='w-full rounded-xl shadow-md object-contain mb-6 aspect-video border border-border/40 bg-white'
+                    />
+                    <div className='w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 border-2 border-primary group-hover:bg-primary/20 transition-colors'>
+                      <span className='text-primary font-bold text-lg'>
+                        {index + 1}
+                      </span>
+                    </div>
+                    <div className='space-y-2 text-center'>
+                      <h3 className='text-xl font-semibold'>{step.title}</h3>
+                      <p className='text-base text-muted-foreground'>
+                        {step.description}
+                      </p>
+                    </div>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious />
+            <CarouselNext />
+            {/* Step Circles Navigation (smaller, subtle, at bottom) */}
+            <div className='flex justify-center gap-3 mt-6 mb-2'>
+              {steps.map((_, idx) => (
+                <button
+                  key={idx}
+                  className={`w-3 h-3 rounded-full border-2 transition-all duration-200 focus:outline-none ${activeIndex === idx ? 'bg-primary border-primary scale-110' : 'bg-muted border-border hover:border-primary/60'}`}
+                  onClick={() =>
+                    emblaApiRef.current && emblaApiRef.current.scrollTo(idx)
+                  }
+                  aria-label={`Go to step ${idx + 1}`}
+                />
+              ))}
             </div>
-          ))}
+          </Carousel>
         </div>
       </section>
     </div>

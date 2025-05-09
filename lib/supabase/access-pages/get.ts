@@ -89,21 +89,40 @@ export async function fetchPageByDomain(domain: string): Promise<Page | null> {
   }
 }
 
-// Fetch a public page by ID or domain (no authentication required)
-export async function fetchPublicPageById(
-  pageIdOrDomain: string,
+// Fetch a public page by ID or slug (no authentication required)
+export async function fetchPublicPage(
+  pageIdOrSlug: string,
 ): Promise<Page | null> {
   try {
     const supabase = await createClient();
 
     // Try fetching by ID first
-    let { data, error } = await supabase
+    const { data: idData } = await supabase
       .from('pages')
       .select('*')
-      .eq('id', pageIdOrDomain)
+      .eq('id', pageIdOrSlug)
       .single();
 
-    return data as Page;
+    // If found by ID, return it
+    if (idData) {
+      return idData as Page;
+    }
+
+    // If not found by ID, try fetching by slug
+    const { data: slugData, error: slugError } = await supabase
+      .from('pages')
+      .select('*')
+      .eq('slug', pageIdOrSlug)
+      .single();
+
+    if (slugError) {
+      if (slugError.code === 'PGRST116') {
+        return null; // No rows found
+      }
+      throw slugError;
+    }
+
+    return slugData as Page;
   } catch (error) {
     console.error('Error fetching public page:', error);
     throw error;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRightIcon, CheckCircle2Icon, Loader2 } from 'lucide-react';
 import { Page, Connection, ConnectionStatus } from '@/utils/types';
@@ -72,7 +72,7 @@ export function ConnectButton({
 
       // Check if polling has been going on for too long (30 seconds)
       const checkPollingDuration = () => {
-        if (pollingStartTime && Date.now() - pollingStartTime > 30000) {
+        if (pollingStartTime && Date.now() - pollingStartTime > 120000) {
           setIsPollingTooLong(true);
         }
       };

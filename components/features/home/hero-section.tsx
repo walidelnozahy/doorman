@@ -20,7 +20,7 @@ export function HeroSection() {
             </Badge>
           </div>
 
-          <h1 className='text-2xl md:text-3xl lg:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70 mb-6 opacity-0 animate-fade-up-delay-200'>
+          <h1 className='text-2xl md:text-4xl lg:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70 mb-6 opacity-0 animate-fade-up-delay-200'>
             The easiest and most secure way
             <br />
             to access your user's AWS accounts
