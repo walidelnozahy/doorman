@@ -6,11 +6,13 @@ import Link from 'next/link';
 
 export function HeroSection() {
   return (
-    <div className={`w-full animate-fade-up animate-fade-up-delay-0`}>
-      <section className='container relative px-4 bg-grid-pattern bg-grid py-36'>
+    <div
+      className={`w-full animate-fade-up animate-fade-up-delay-0 relative mt-32 sm:mt-24`}
+    >
+      <section className='container relative px-4 bg-grid-pattern bg-grid'>
         <div className='absolute pointer-events-none inset-0 flex items-center justify-center bg-background [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]' />
         <div className='flex flex-col items-center justify-center text-center max-w-4xl mx-auto relative'>
-          <div className='mb-8 opacity-0 animate-fade-up'>
+          <div className='opacity-0 animate-fade-up'>
             <Badge
               variant='outline'
               className='flex items-center gap-1.5 font-medium'
@@ -20,18 +22,18 @@ export function HeroSection() {
             </Badge>
           </div>
 
-          <h1 className='text-2xl md:text-4xl lg:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70 mb-6 opacity-0 animate-fade-up-delay-200'>
+          <h1 className='text-2xl md:text-4xl lg:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70 mt-8 opacity-0 animate-fade-up-delay-200'>
             The easiest and most secure way
             <br />
             to access your user's AWS accounts
           </h1>
 
-          <p className='text-base text-muted-foreground mb-8 max-w-2xl opacity-0 animate-fade-up-delay-400 font-light'>
+          <p className='text-base text-muted-foreground mt-6 max-w-2xl opacity-0 animate-fade-up-delay-400 font-light'>
             Doorman is a hosted page that enables your users to easily and
             securely grant you least-privileged access to their AWS accounts.
           </p>
 
-          <div className='space-y-4 opacity-0 animate-fade-up-delay-400'>
+          <div className='space-y-4 mt-8 opacity-0 animate-fade-up-delay-400'>
             <div className='flex flex-col sm:flex-row gap-4 justify-center'>
               <Button asChild className=''>
                 <Link href='/pages'>Get Started</Link>

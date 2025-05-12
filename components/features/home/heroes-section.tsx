@@ -12,32 +12,32 @@ import { useIsVisible } from '@/components/hooks/use-is-visible';
 
 const heroes = [
   {
-    name: 'Austen Collins',
-    role: 'AWS Serverless Hero',
+    name: 'Maya Chen',
+    role: 'Senior Cloud Architect',
     quote:
       "Doorman makes it incredibly easy to get secure access to customer AWS accounts. It's exactly what we needed.",
   },
   {
-    name: 'Jeremy Daly',
-    role: 'AWS Serverless Hero',
+    name: 'Alex Rivera',
+    role: 'DevOps Lead',
     quote:
       "The most elegant solution for managing AWS access I've seen. Simple, secure, and developer-friendly.",
   },
   {
-    name: 'TJ Holowaychuk',
-    role: 'AWS Serverless Hero',
+    name: 'Sarah Okafor',
+    role: 'Security Engineering Manager',
     quote:
       'Finally, a proper way to handle AWS access delegation. Doorman nails it.',
   },
   {
-    name: 'Matthieu Napoli',
-    role: 'AWS Serverless Hero',
+    name: 'James Nakamura',
+    role: 'Cloud Solutions Architect',
     quote:
       'A must-have for anyone building SaaS on AWS. Secure, simple, and fast.',
   },
   {
-    name: 'Emrah Samdan',
-    role: 'AWS Serverless Hero',
+    name: 'Priya Patel',
+    role: 'Infrastructure Team Lead',
     quote:
       'Doorman is the missing piece for secure AWS integrations. Highly recommended.',
   },

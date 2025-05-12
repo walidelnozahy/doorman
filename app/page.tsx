@@ -11,7 +11,6 @@ export default async function Home() {
       <div className='flex items-center flex-col justify-center min-h-full pb-16 space-y-32 sm:space-y-24'>
         <HeroSection />
         <HeroesSection />
-
         <FeaturesSection />
         <PricingSection />
         <FAQSection />

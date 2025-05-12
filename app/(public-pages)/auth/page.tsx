@@ -12,7 +12,7 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
   const hasSuccessMessage = searchParams && 'success' in searchParams;
 
   return (
-    <div className='w-full bg-gradient-to-br from-background via-background/95 to-background/90'>
+    <div className='min-h-[calc(100vh-4rem)] flex items-center justify-center w-full bg-gradient-to-br from-background via-background/95 to-background/90'>
       <div className='w-full max-w-sm mx-auto space-y-4 animate-fade-up p-4'>
         {!hasSuccessMessage && (
           <div className='text-center space-y-1.5'>
