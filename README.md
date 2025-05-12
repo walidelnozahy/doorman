@@ -1,10 +1,14 @@
 # Doorman
 
 <div align="center">
-  <img alt="Securely manage AWS account access requests" src="https://github.com/user-attachments/assets/58364178-5f5f-4c3d-9c83-9fd559b2ad17" width="400">
-  <p>Securely manage AWS account access requests</p>
+  <br/>
+  <img alt="Securely manage AWS account access requests" src="https://github.com/user-attachments/assets/58364178-5f5f-4c3d-9c83-9fd559b2ad17" width="500">
+  <br/>
+  <br/>
+  <h2>Securely manage AWS account access requests</h2>
+  <br/>
+  <br/>
 </div>
-
 
 ## Overview
 
