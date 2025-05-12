@@ -1,7 +1,8 @@
 <h1 align="center">Doorman</h1>
 
 
-<img alt="Securely manage AWS account access requests" src="https://github.com/user-attachments/assets/936d6119-3ace-4800-9d58-7d49359de356">
+<img alt="Securely manage AWS account access requests" src="https://github.com/user-attachments/assets/91e9193d-1660-4ab3-8b9a-6ea71cfefa8c">
 <p align="center">
  Securely manage AWS account access requests
 </p>
+
